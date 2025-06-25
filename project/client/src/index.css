@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* custom styles must come after Tailwind */
+
+
+h1 {
+  color: red;
+}
