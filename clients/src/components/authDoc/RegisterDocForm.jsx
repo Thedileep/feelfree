@@ -32,8 +32,14 @@ const TherapistRegister = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, files } = e.target;
+    if (files) {
+      setFormData({ ...formData, [name]: files[0] }); 
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
+
 
   const handleNext = () => {
     if (step < steps.length - 1) setStep(step + 1);
@@ -45,22 +51,34 @@ const TherapistRegister = () => {
 
  const handleSubmit = async (e) => {
   e.preventDefault();
-  if (formData.password !== formData.confirmPassword) {
-    toast.error("Passwords do not match");
-    return;
-  }
 
-  try {
-    await axios.post(`${import.meta.env.VITE_API_URL}/api/register-therapist`, formData);
-    toast.success("Registration successful");
-    setTimeout(() => {
-      navigate("/login/therapist");
-    }, 1200); 
-  } catch (err) {
-    const msg = err.response?.data?.message || err.message || "Something went wrong";
-    toast.error("Error: " + msg);
-  }
-};
+      if (formData.password !== formData.confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+
+      const data = new FormData();
+      for (let key in formData) {
+        data.append(key, formData[key]);
+      }
+
+      try {
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/register-therapist`, data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        toast.success("Registration successful");
+        setTimeout(() => {
+          navigate("/login/therapist");
+        }, 1200);
+      } catch (err) {
+        const msg = err.response?.data?.message || err.message || "Something went wrong";
+        toast.error("Error: " + msg);
+      }
+    };
+
 
   return (
     <div className="min-h-screen bg-indigo-50 flex items-center justify-center px-4">
