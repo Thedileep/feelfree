@@ -17,7 +17,7 @@ const ChatAI = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:4000/api/chat", { message: input }, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/chat`, { message: input }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`
         }

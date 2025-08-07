@@ -10,7 +10,7 @@ const Journal = () => {
   const fetchEntries = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:4000/api/journal-get", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/journal-get`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSavedEntries(res.data.entries.reverse());
