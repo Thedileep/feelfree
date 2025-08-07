@@ -13,9 +13,6 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      console.log('Request body:', req.body);
-      console.log('Uploaded files:', req.files);
-
       const {
         name, email, phone, dob, nationality,
         occupation, experience, address, specialization,
@@ -27,16 +24,21 @@ router.post(
       }
 
       const existing = await Therapist.findOne({ email });
-      if (existing) return res.status(400).json({ message: 'Email already exists' });
+      if (existing) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+
+      const photoPath = req.files?.photo?.[0]?.path?.replace(/\\/g, '/').replace(/^.*uploads/, '/uploads') || '';
+      const degreePath = req.files?.degree?.[0]?.path?.replace(/\\/g, '/').replace(/^.*uploads/, '/uploads') || '';
 
       const therapist = new Therapist({
         name, email, phone, dob, nationality,
         occupation, experience, address, specialization,
         licenseNumber,
-        photoPath: req.files?.photo?.[0]?.path || '',
-        degreePath: req.files?.degree?.[0]?.path || '',
+        photoPath,
+        degreePath,
         password: hashedPassword
       });
 
@@ -48,6 +50,7 @@ router.post(
     }
   }
 );
+
 
 
 // Login route
