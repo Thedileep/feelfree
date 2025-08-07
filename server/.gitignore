@@ -1,6 +1,6 @@
 .env
-/database/*
-/models/*
-/docRoutes/*
-/adminRoutes/*
+# /database/*
+# /models/*
+# /docRoutes/*
+# /adminRoutes/*
 node_modules
