@@ -1,9 +1,13 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const Therapist = require('../models/registerDocModel');
-const upload = require('../middleware/upload');
+
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const { storage } = require('../docRoutes/cloudStorage');
+const upload = multer({ storage });
+
 
 router.post(
   '/register-therapist',
@@ -24,21 +28,16 @@ router.post(
       }
 
       const existing = await Therapist.findOne({ email });
-      if (existing) {
-        return res.status(400).json({ message: 'Email already exists' });
-      }
+      if (existing) return res.status(400).json({ message: 'Email already exists' });
 
       const hashedPassword = await bcrypt.hash(password, 10);
-
-      const photoPath = req.files?.photo?.[0]?.path?.replace(/\\/g, '/').replace(/^.*uploads/, '/uploads') || '';
-      const degreePath = req.files?.degree?.[0]?.path?.replace(/\\/g, '/').replace(/^.*uploads/, '/uploads') || '';
 
       const therapist = new Therapist({
         name, email, phone, dob, nationality,
         occupation, experience, address, specialization,
         licenseNumber,
-        photoPath,
-        degreePath,
+        photoPath: req.files?.photo?.[0]?.path || '',
+        degreePath: req.files?.degree?.[0]?.path || '',
         password: hashedPassword
       });
 
@@ -50,7 +49,6 @@ router.post(
     }
   }
 );
-
 
 
 // Login route
