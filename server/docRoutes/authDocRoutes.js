@@ -5,8 +5,8 @@ const Therapist = require('../models/registerDocModel');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const { storage } = require('../docRoutes/cloudStorage');
-const upload = multer({ storage });
+const { storage,fileFilter } = require('../docRoutes/cloudStorage');
+const upload = multer({ storage, fileFilter });
 
 
 router.post(
@@ -16,8 +16,9 @@ router.post(
     { name: 'degree', maxCount: 1 }
   ]),
   async (req, res) => {
+
     try {
-      const {
+        const {
         name, email, phone, dob, nationality,
         occupation, experience, address, specialization,
         licenseNumber, password
@@ -33,8 +34,15 @@ router.post(
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const therapist = new Therapist({
-        name, email, phone, dob, nationality,
-        occupation, experience, address, specialization,
+        name,
+        email,
+        phone,
+        dob,
+        nationality,
+        occupation,
+        experience,
+        address,
+        specialization,
         licenseNumber,
         photoPath: req.files?.photo?.[0]?.path || '',
         degreePath: req.files?.degree?.[0]?.path || '',
@@ -44,12 +52,15 @@ router.post(
       await therapist.save();
       res.status(201).json({ message: 'Therapist registered successfully' });
     } catch (err) {
-      console.error('Registration Error:', err);
-      res.status(500).json({ message: 'Registration failed', error: err.message });
+      console.error('❌ Registration Error:', err.message);
+      res.status(500).json({
+        message: 'Registration failed',
+        error: err.message,
+        stack: err.stack
+      });
     }
   }
 );
-
 
 // Login route
 
