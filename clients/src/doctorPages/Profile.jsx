@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
+ import { motion } from "framer-motion";
+ 
 const TherapistProfile = () => {
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState('');
@@ -42,21 +43,76 @@ const TherapistProfile = () => {
       <p><strong>Address:</strong> {profile.address}</p>
 
       {/* Display photo and certificate */}
-      <div style={{ marginTop: '20px' }}>
-        <p><strong>Photo:</strong></p>
-        <img
-          src={`${import.meta.env.VITE_API_URL}/${profile.photoPath}`}
-          alt="Therapist"
-          style={{ width: '200px', border: '1px solid #ccc', borderRadius: '8px' }}
-        />
+    
+      <div style={{ marginTop: '30px' }}>
+        {/* Photo Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          style={{
+            marginBottom: '20px',
+            padding: '10px',
+            border: '1px solid #ccc',
+            borderRadius: '12px',
+            backgroundColor: '#f9f9f9',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+            maxWidth: '240px'
+          }}
+        >
+          <p><strong>Photo:</strong></p>
+          <img
+            src={profile.photoPath}
+            alt="Therapist"
+            style={{
+              width: '200px',
+              height: 'auto',
+              borderRadius: '10px',
+              border: '2px solid #4caf50',
+            }}
+          />
+        </motion.div>
 
-        <p style={{ marginTop: '10px' }}><strong>Certificate:</strong></p>
-        <img
-          src={`${import.meta.env.VITE_API_URL}/${profile.degreePath}`}
-          alt="Certificate"
-          style={{ width: '200px', border: '1px solid #ccc', borderRadius: '8px' }}
-        />
+        {/* Certificate Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          style={{
+            padding: '10px',
+            border: '1px solid #ccc',
+            borderRadius: '12px',
+            backgroundColor: '#f9f9f9',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+            maxWidth: '240px'
+          }}
+        >
+          <p><strong>Certificate:</strong></p>
+
+          {/* ✅ Check if it's a PDF */}
+          {profile.degreePath?.endsWith('.pdf') ? (
+            <iframe
+              src={profile.degreePath}
+              title="Certificate PDF"
+              width="200"
+              height="300"
+              style={{ border: '1px solid #4caf50', borderRadius: '8px' }}
+            />
+          ) : (
+            <img
+              src={profile.degreePath}
+              alt="Certificate"
+              style={{
+                width: '200px',
+                height: 'auto',
+                borderRadius: '10px',
+                border: '2px solid #4caf50',
+              }}
+            />
+          )}
+        </motion.div>
       </div>
+
     </div>
   );
 };

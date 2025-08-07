@@ -97,9 +97,53 @@ const AdminDashboard = () => {
           <p><strong>Experience:</strong> {selectedTherapist.experience}</p>
           <p><strong>Address:</strong> {selectedTherapist.address}</p>
           <p><strong>License Number:</strong> {selectedTherapist.licenseNumber}</p>
-          <p><strong>Photo:</strong> <a href={`http://localhost:4000/${selectedTherapist.photoPath}`} target="_blank" rel="noreferrer">View</a></p>
-          <p><strong>Degree:</strong> <a href={`http://localhost:4000/${selectedTherapist.degreePath}`} target="_blank" rel="noreferrer">View</a></p>
-         
+          <p>
+            <strong>Photo:</strong>{' '}
+             <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center', 
+                  marginTop: '20px',    
+                }}
+              >
+                <img
+                  src={selectedTherapist.photoPath}
+                  alt="therapist"
+                  style={{
+                    width: '200px',
+                    height: '220px',
+                    borderRadius: '3px',
+                    border: '2px solid #090a09ff',
+                  }}
+                />
+              </div>
+          </p>
+          <p>
+            <strong>Degree:</strong>{' '}
+             <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center', 
+                  marginTop: '20px',    
+                }}
+              >
+          <iframe
+            src={selectedTherapist
+              .degreePath}
+            alt="Certificate"
+            style={{
+              width: '200px',
+              height: '220px',
+              borderRadius: '1px',
+              border: '2px solid #4caf50',
+              alignItems:'center'
+            }}
+          />
+          </div>
+          </p>
+
           <div className="mt-6 flex gap-4 ">
             {selectedTherapist.isApproved !== true && (
               <button
