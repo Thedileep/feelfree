@@ -18,6 +18,8 @@ const storage = new CloudinaryStorage({
     return {
       folder: 'therapist_uploads',
       public_id: `${Date.now()}-${file.originalname}`,
+       resource_type: 'auto',
+       type:'upload'
     };
   },
 });
