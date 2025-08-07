@@ -1,0 +1,6 @@
+.env
+/database/*
+/models/*
+/docRoutes/*
+/adminRoutes/*
+node_modules
