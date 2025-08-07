@@ -31,10 +31,10 @@ const TherapistRegister = () => {
 
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+    const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
-      setFormData({ ...formData, [name]: files[0] }); 
+      setFormData({ ...formData, [name]: files[0] });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -50,34 +50,33 @@ const TherapistRegister = () => {
   };
 
  const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-      if (formData.password !== formData.confirmPassword) {
-        toast.error("Passwords do not match");
-        return;
-      }
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
 
-      const data = new FormData();
-      for (let key in formData) {
-        data.append(key, formData[key]);
-      }
+    const data = new FormData();
+    for (let key in formData) {
+      data.append(key, formData[key]);
+    }
 
-      try {
-        await axios.post(`${import.meta.env.VITE_API_URL}/api/register-therapist`, data, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/register-therapist`, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-        toast.success("Registration successful");
-        setTimeout(() => {
-          navigate("/login/therapist");
-        }, 1200);
-      } catch (err) {
-        const msg = err.response?.data?.message || err.message || "Something went wrong";
-        toast.error("Error: " + msg);
-      }
-    };
+      toast.success("Registration successful");
+      setTimeout(() => navigate("/login/therapist"), 1200);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || "Something went wrong";
+      toast.error("Error: " + msg);
+    }
+  };
+
 
 
   return (
@@ -152,7 +151,7 @@ const TherapistRegister = () => {
         <input
           type="file"
           name="degree"
-          accept=".pdf, .doc, .docx"
+          accept=".pdf"
           onChange={handleChange}
           required
           className="w-full px-4 py-2 border rounded-md"
