@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
+
+  const navigate=useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,7 +23,7 @@ const AdminLogin = () => {
       toast.success(res.data.message || 'Login successful!');
       localStorage.setItem('adminToken', res.data.token);
       setTimeout(() => {
-        window.location.href = '/admin-dashboard';
+       navigate('/admin-dashboard');
       }, 1000);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Login failed');

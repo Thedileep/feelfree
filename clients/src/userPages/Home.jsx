@@ -16,8 +16,8 @@ const Home = () => {
   const [showTherapistMenu, setShowTherapistMenu] = useState(false);
 
   const features = [
-    { icon: <Pencil size={32} />, title: "Mood Tracker", desc: "Log daily feelings & see your emotional trends." },
-    { icon: <BookOpen size={32} />, title: "Daily Journal", desc: "Free expression. Your thoughts, your space." },
+    { icon: <Pencil size={32} />, title: "Mood Tracker", desc: "Log daily feelings & see your emotional trends.",onClick: () => navigate("/mood-tracker") },
+    { icon: <BookOpen size={32} />, title: "Daily Journal", desc: "Free expression. Your thoughts, your space.", onClick: () => navigate("/journal") },
     { icon: <Bot size={32} />, title: "AI ChatBuddy", desc: "Anonymous, supportive AI conversation anytime.", onClick: () => navigate("/chat") },
     { icon: <Music size={32} />, title: "Soothing Music", desc: "Heal with calm sounds curated for you." },
     { icon: <Lightbulb size={32} />, title: "Mindful Tips", desc: "Daily mental health guidance & reminders." },
@@ -31,11 +31,6 @@ const Home = () => {
       <nav className="flex justify-between items-center py-6 px-8 shadow-md bg-white dark:bg-gray-800 sticky top-0 z-50">
         <h1 className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">FeelFree</h1>
         <div className="space-x-6 flex items-center">
-
-          {/* Home Link */}
-          <Link to="/" className="hover:text-indigo-600 font-medium dark:text-gray-100 dark:hover:text-indigo-400">
-            Home
-          </Link>
 
           {/* USER DROPDOWN */}
           <div className="relative">
