@@ -121,27 +121,9 @@ const AdminDashboard = () => {
           </p>
           <p>
             <strong>Degree:</strong>{' '}
-             <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center', 
-                  marginTop: '20px',    
-                }}
-              >
-          <iframe
-            src={selectedTherapist
-              .degreePath}
-            alt="Certificate"
-            style={{
-              width: '200px',
-              height: '220px',
-              borderRadius: '1px',
-              border: '2px solid #4caf50',
-              alignItems:'center'
-            }}
-          />
-          </div>
+            <a href={selectedTherapist.degreePath} target="_blank" rel="noopener noreferrer">
+              View 
+            </a>
           </p>
 
           <div className="mt-6 flex gap-4 ">

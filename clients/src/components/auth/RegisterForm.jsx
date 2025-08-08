@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
@@ -97,12 +97,9 @@ const RegisterForm = () => {
 
         <p className="text-center text-sm text-gray-700">
           Already have an account?{' '}
-          <a
-            href="/login/user"
-            className="text-indigo-600 hover:underline font-medium"
-          >
+        <Link to="/login/user" className="text-indigo-600 hover:underline font-medium">
             Login
-          </a>
+          </Link>
         </p>
       </motion.form>
     </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -185,12 +185,9 @@ const TherapistRegister = () => {
         </div>
          <p className="text-center text-sm text-gray-700">
           Already have an account?{' '}
-          <a
-            href="/login/therapist"
-            className="text-indigo-600 hover:underline font-medium"
-          >
+          <Link to="/login/therapist" className="text-indigo-600 hover:underline font-medium">
             Login
-          </a>
+          </Link>
         </p>
       </form>
     </div>
