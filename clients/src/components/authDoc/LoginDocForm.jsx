@@ -1,28 +1,37 @@
 import React, { useState } from 'react';
-import { useNavigate,Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const LoginDocForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [form, setForm] = useState({ email: '', password: '' });
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
     try {
-      const res = await axios.post(
+      const { data } = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/login-therapist`,
-        { email, password }
+        form,
+        { timeout: 7000 } // prevent hanging
       );
-      localStorage.setItem("token", res.data.token);
-      toast.success("Login successful", { autoClose: 2000 });
-      navigate("/therapist-dashboard");
+      localStorage.setItem('token', data.token);
+      toast.success('Login successful', { autoClose: 1500 });
+      navigate('/therapist-dashboard');
     } catch (err) {
-      const msg = err.response?.data?.message || "Invalid credentials. Please try again.";
-      toast.error(msg, { autoClose: 3000 });
+      toast.error(err.response?.data?.message || 'Invalid credentials', { autoClose: 2000 });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -30,41 +39,46 @@ const LoginDocForm = () => {
     <div className="min-h-screen bg-gradient-to-tr from-indigo-300 via-blue-100 to-purple-300 flex items-center justify-center px-4">
       <motion.form
         onSubmit={handleSubmit}
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md space-y-6"
+        transition={{ duration: 0.3 }} // faster animation
+        className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md space-y-5"
       >
-        <h2 className="text-3xl font-extrabold text-center text-indigo-700">Welcome Back</h2>
+        <h2 className="text-2xl font-bold text-center text-indigo-700">Therapist Login</h2>
 
         <input
           type="email"
+          name="email"
           placeholder="Email"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={form.email}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"
           required
         />
 
         <input
           type="password"
+          name="password"
           placeholder="Password"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={form.password}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"
           required
         />
 
         <button
           type="submit"
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition duration-200"
+          disabled={loading}
+          className={`w-full py-2 text-white font-semibold rounded-lg transition duration-200 ${
+            loading ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'
+          }`}
         >
-          Login
+          {loading ? 'Logging in...' : 'Login'}
         </button>
 
         <p className="text-center text-sm text-gray-600">
           Don&apos;t have an account?{' '}
-        <Link to="/register/therapist" className="text-indigo-600 hover:underline font-medium">
+          <Link to="/register/therapist" className="text-indigo-600 hover:underline font-medium">
             Register
           </Link>
         </p>

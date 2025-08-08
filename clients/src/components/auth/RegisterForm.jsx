@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate,Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
@@ -15,52 +15,61 @@ const RegisterForm = () => {
     gender: '',
     occupation: '',
   });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const navigate = useNavigate();
-  const [error, setError] = useState('');
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // Prevent multiple submits
+    setLoading(true);
+
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/register`, formData);
-      toast.success('User registered successfully',{ autoClose: 2000 });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/register`, formData, {
+        timeout: 8000, // network timeout
+      });
+      toast.success('User registered successfully', { autoClose: 1500 });
       navigate('/dashboard');
     } catch (error) {
-     
-      toast.error(error.response?.data?.message || 'Registration failed',{ autoClose: 3000 });
+      const msg =
+        error.response?.data?.message ||
+        (error.code === 'ECONNABORTED'
+          ? 'Network slow, please try again.'
+          : 'Registration failed');
+      toast.error(msg, { autoClose: 2000 });
+    } finally {
+      setLoading(false);
     }
   };
+
+  const fields = [
+    { name: 'name', type: 'text', placeholder: 'Full Name' },
+    { name: 'email', type: 'email', placeholder: 'Email' },
+    { name: 'password', type: 'password', placeholder: 'Password' },
+    { name: 'dob', type: 'date', placeholder: '' },
+    { name: 'nationality', type: 'text', placeholder: 'Nationality' },
+    { name: 'occupation', type: 'text', placeholder: 'Occupation' },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-tr from-indigo-300 via-blue-100 to-purple-300 flex items-center justify-center px-4">
       <motion.form
         onSubmit={handleSubmit}
-        initial={{ opacity: 0, scale: 0.95, y: 30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
         className="backdrop-blur-md bg-white/70 shadow-2xl rounded-2xl p-8 w-full max-w-md space-y-5 border border-white/40"
       >
         <h2 className="text-3xl font-bold text-center text-indigo-700 drop-shadow">
           Create Your Account
         </h2>
 
-        {error && (
-          <p className="text-red-600 text-center text-sm font-medium animate-pulse">
-            {error}
-          </p>
-        )}
-
-        {[
-          { name: 'name', type: 'text', placeholder: 'Full Name' },
-          { name: 'email', type: 'email', placeholder: 'Email' },
-          { name: 'password', type: 'password', placeholder: 'Password' },
-          { name: 'dob', type: 'date', placeholder: '' },
-          { name: 'nationality', type: 'text', placeholder: 'Nationality' },
-          { name: 'occupation', type: 'text', placeholder: 'Occupation' },
-        ].map((field) => (
+        {fields.map((field) => (
           <input
             key={field.name}
             name={field.name}
@@ -90,14 +99,24 @@ const RegisterForm = () => {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
-          className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition duration-300 shadow-md"
+          disabled={loading}
+          className={`w-full py-2 ${
+            loading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
+          } text-white font-semibold rounded-lg transition duration-300 shadow-md flex items-center justify-center`}
         >
-          Register
+          {loading ? (
+            <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+          ) : (
+            'Register'
+          )}
         </motion.button>
 
         <p className="text-center text-sm text-gray-700">
           Already have an account?{' '}
-        <Link to="/login/user" className="text-indigo-600 hover:underline font-medium">
+          <Link
+            to="/login/user"
+            className="text-indigo-600 hover:underline font-medium"
+          >
             Login
           </Link>
         </p>
