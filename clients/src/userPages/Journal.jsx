@@ -24,12 +24,12 @@ const Journal = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:4000/api/journal-post",
+        `${import.meta.env.VITE_API_URL}/api/journal-post`,
         { text: entry },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setEntry("");
-      fetchEntries(); // Refresh list
+      fetchEntries(); 
     } catch (err) {
       console.error("Error saving journal entry", err);
     }
