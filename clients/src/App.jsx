@@ -20,11 +20,11 @@ import BookSchedule from "./Appointments/BookSchedule";
 import DoctorList from "./Appointments/DoctorList";
 import PaymentPage from "./Appointments/Payments";
 import AboutUs from "./homePages/About";
-import ContactUs from "./homePages/contact";
 import Pricing from "./homePages/Pricing";
 import TermsConditions from "./homePages/TermsCondition";
 import PrivacyPolicy from "./homePages/PrivacyPolicy";
 import CancellationRefund from "./homePages/Refund";
+import ContactUs from "./homePages/Contact";
 
 function App() {
   return (
