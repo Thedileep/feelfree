@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./userPages/Home";
+import Home from "./homePages/Home";
 import Login from "./userPages/Login";
 import Register from "./userPages/Register";
 import Dashboard from "./userPages/Dashboard";
@@ -19,6 +19,12 @@ import 'react-toastify/dist/ReactToastify.css';
 import BookSchedule from "./Appointments/BookSchedule";
 import DoctorList from "./Appointments/DoctorList";
 import PaymentPage from "./Appointments/Payments";
+import AboutUs from "./homePages/About";
+import ContactUs from "./homePages/contact";
+import Pricing from "./homePages/Pricing";
+import TermsConditions from "./homePages/TermsCondition";
+import PrivacyPolicy from "./homePages/PrivacyPolicy";
+import CancellationRefund from "./homePages/Refund";
 
 function App() {
   return (
@@ -31,6 +37,12 @@ function App() {
         <Route path="/register/user" element={<Register />} />
         <Route path="/register/therapist" element={<RegisterDoc />} />
         <Route path="/login/therapist" element={<LoginDoc />} />
+        <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/contact-us" element={<ContactUs />} />
+        <Route path="/pricing" element={<Pricing/>} />
+        <Route path='/terms-conditions' element={<TermsConditions/>}/>
+        <Route path="/privacy-policy" element={<PrivacyPolicy/>}/>
+        <Route path="/cancellation-refund" element={<CancellationRefund/>} />
 
         <Route
           path="/dashboard"
