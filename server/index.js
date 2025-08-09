@@ -26,12 +26,17 @@ app.use("/api", require("./userRoutes/authRoutes"));
 app.use("/api",require('./userRoutes/dashboradRoutes'));
 app.use('/api',require('./userRoutes/chatAIRoutes'));
 app.use('/api',require('./userRoutes/journalRoutes'));
+app.use('/api',require('./userRoutes/bookRoutes'))
+app.use("/api/payments", require('./userRoutes/paymentRoute'));
+
 //app.use('/api',require('./routes/moodRoutes'))
 
 //therepist api
 app.use('/api',require('./docRoutes/authDocRoutes'))
 app.use('/api',require('./docRoutes/profileRoutes'))
 app.use('/api',require('./docRoutes/changePasswordRoute'))
+app.use('/api',require('./docRoutes/doctorListRoute'))
+
 
 //admin API
 app.use('/api',require('./adminRoutes/authRoute'))

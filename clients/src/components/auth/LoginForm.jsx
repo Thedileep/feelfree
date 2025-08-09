@@ -26,9 +26,9 @@ const LoginForm = () => {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/login`,
         formData,
-        { timeout: 8000 } // fail fast on bad network
+        { timeout: 8000 } 
       );
-
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.setItem('token', res.data.token);
       toast.success('Login successful', { autoClose: 1500 });
       navigate('/dashboard');

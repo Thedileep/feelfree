@@ -38,6 +38,12 @@ const Dashboard = () => {
             onClick={() => navigate("/journal")}
           />
 
+          <DashboardCard
+            title="Book Scheduling"
+            description="Book an appointment with a therapist."
+            icon="📅"
+            onClick={() => navigate("/select-doctor")}
+          />
 
           <DashboardCard
             title="Community"

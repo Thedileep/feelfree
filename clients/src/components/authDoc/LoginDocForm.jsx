@@ -23,8 +23,9 @@ const LoginDocForm = () => {
       const { data } = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/login-therapist`,
         form,
-        { timeout: 7000 } // prevent hanging
+        { timeout: 7000 } 
       );
+      localStorage.setItem("therapist", JSON.stringify(res.data.therapist));
       localStorage.setItem('token', data.token);
       toast.success('Login successful', { autoClose: 1500 });
       navigate('/therapist-dashboard');

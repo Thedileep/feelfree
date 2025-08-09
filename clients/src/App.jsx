@@ -11,14 +11,14 @@ import Journal from "./userPages/Journal";
 import MoodTracker from "./userPages/MoodTracker";
 import RegisterDoc from "./doctorPages/RegisterDoc";
 import LoginDoc from "./doctorPages/LoginDoc";
-import AdminLogin from "./adminpages/AdminLogin";
-import ProtectedAdmin from "./components/Protected/ProtectedAdmin";
-import AdminDashboard from "./adminpages/AdminDashboard";
 import NotFound from "./components/NotFound";
 import ProtectedDocRoute from "./components/Protected/protectedDocRoutes";
 import TherapistDashboard from "./doctorPages/DashboardDoc";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import BookSchedule from "./Appointments/BookSchedule";
+import DoctorList from "./Appointments/DoctorList";
+import PaymentPage from "./Appointments/Payments";
 
 function App() {
   return (
@@ -27,20 +27,10 @@ function App() {
       <Routes>
         <Route path="*" element={<NotFound/>}/>
        <Route path="/" element={<Home />} />
-        <Route path="/admin-login" element={<AdminLogin/>} />
         <Route path="/login/user" element={<Login />} />
         <Route path="/register/user" element={<Register />} />
         <Route path="/register/therapist" element={<RegisterDoc />} />
         <Route path="/login/therapist" element={<LoginDoc />} />
-        
-        <Route
-          path="/admin-dashboard"
-          element={
-            <ProtectedAdmin>
-              <AdminDashboard/>
-            </ProtectedAdmin>
-          }
-        />
 
         <Route
           path="/dashboard"
@@ -58,6 +48,34 @@ function App() {
          </ProtectedRoute>
          } />
        
+         <Route
+          path="/select-doctor"
+          element={
+            <ProtectedRoute>
+              <DoctorList />
+            </ProtectedRoute>
+          }
+        />
+
+        
+         <Route
+          path="/book-schedule"
+          element={
+            <ProtectedRoute>
+              <BookSchedule />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payment/:id"
+          element={
+            <ProtectedRoute>
+              <PaymentPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/chat"
           element={

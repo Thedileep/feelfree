@@ -15,11 +15,18 @@ const therapistSchema = new mongoose.Schema({
   degreePath: String,
   password: String,
   isApproved: {
-  type: Boolean,
-  default: false
-},
+    type: Boolean,
+    default: false
+  },
+  rating: {
+    type: Number,
+    default: 0 
+  },
+  ratingCount: {
+    type: Number,
+    default: 0 
+  },
   createdAt: { type: Date, default: Date.now }
-
 });
 
 module.exports = mongoose.model('Therapist', therapistSchema);
