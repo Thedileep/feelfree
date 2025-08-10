@@ -19,7 +19,7 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return; // Prevent double submit
+    if (loading) return; 
     setLoading(true);
 
     try {
@@ -28,10 +28,20 @@ const LoginForm = () => {
         formData,
         { timeout: 8000 } 
       );
+
       localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem("loginTime", Date.now());
+      
       toast.success('Login successful', { autoClose: 1500 });
       navigate('/dashboard');
+
+      const sessionTimeout = 60 * 60 * 1000;
+      setTimeout(() => {
+        localStorage.clear();
+        navigate("/login");
+      }, sessionTimeout);
+
     } catch (err) {
       const msg =
         err.response?.data?.message ||

@@ -15,7 +15,7 @@ const DashboardDoc = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false); 
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("doctoken");
     if (!token) {
       setAuthenticated(false);
       setLoading(false);
@@ -48,7 +48,7 @@ const DashboardDoc = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("doctoken");
     toast.success("Successfully Logout", { autoClose: 2000 });
     setAuthenticated(false);
   };

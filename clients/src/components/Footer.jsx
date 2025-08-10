@@ -1,13 +1,21 @@
-import React from 'react';
+import React from "react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white text-center py-6 mt-10">
-      <p className="text-lg font-semibold">A Satisfied Member</p>
-      <p className="text-sm mt-1">© 2025 FeelFree. All rights reserved.</p>
-      <strong className="text-sm mt-1">Founder: Dileep Yadav</strong>
-      <p className="text-sm mt-1">
-        Made with <span className="text-red-500">❤️</span> for your mental well-being.
+    <footer className="py-8 bg-gray-900 text-center text-sm text-white px-4">
+      <div className="flex flex-wrap justify-center gap-6 font-medium mb-4">
+        <Link to="/pricing" className="text-sky-200 hover:underline hover:text-gray-300 transition">Pricing</Link>
+        <Link to="/privacy-policy" className="text-sky-200 hover:underline hover:text-indigo-400 transition">Privacy Policy</Link>
+        <Link to="/terms-conditions" className="text-sky-200 hover:underline hover:text-indigo-400 transition">Terms & Conditions</Link>
+        <Link to="/cancellation-refund" className="text-sky-200 hover:underline hover:text-indigo-400 transition">Cancellation & Refund</Link>
+      </div>
+
+      <p>&copy; {new Date().getFullYear()} FeelFree. All rights reserved.</p>
+      <p className="mt-1">Made with ❤️ for your mental well-being.</p>
+      <p>
+        <strong className="text-indigo-600">Founder: </strong>
+        <b className="text-green-600">Dileep Yadav</b>
       </p>
     </footer>
   );

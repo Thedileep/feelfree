@@ -25,10 +25,12 @@ import TermsConditions from "./homePages/TermsCondition";
 import PrivacyPolicy from "./homePages/PrivacyPolicy";
 import CancellationRefund from "./homePages/Refund";
 import ContactUs from "./homePages/Contact";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <BrowserRouter>
+    <ScrollToTop/>
      <ToastContainer position="top-center" autoClose={3000} />
       <Routes>
         <Route path="*" element={<NotFound/>}/>

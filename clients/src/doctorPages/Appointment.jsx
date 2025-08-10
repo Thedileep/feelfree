@@ -4,7 +4,7 @@ const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
 
   useEffect(() => {
-    // Simulate fetching from API
+    
     setTimeout(() => {
       setAppointments([
         { _id: "1", userName: "John Doe", date: "2025-08-06", status: "pending" },

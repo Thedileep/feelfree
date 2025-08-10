@@ -26,13 +26,16 @@ const RegisterForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return; // Prevent multiple submits
+    if (loading) return; 
     setLoading(true);
 
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/api/register`, formData, {
-        timeout: 8000, // network timeout
+        timeout: 2000, 
       });
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("logintime", Date.now());
+
       toast.success('User registered successfully', { autoClose: 1500 });
       navigate('/dashboard');
     } catch (error) {

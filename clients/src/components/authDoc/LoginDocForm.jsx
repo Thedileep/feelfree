@@ -26,7 +26,9 @@ const LoginDocForm = () => {
         { timeout: 7000 } 
       );
       localStorage.setItem("therapist", JSON.stringify(res.data.therapist));
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('doctoken', data.token);
+      localStorage.setItem("doclogintime", Date.now());
+
       toast.success('Login successful', { autoClose: 1500 });
       navigate('/therapist-dashboard');
     } catch (err) {

@@ -69,6 +69,10 @@ const TherapistRegister = () => {
         },
       });
 
+      localStorage.setItem("doctoken", res.data.token);
+      localStorage.setItem("doclogintime", Date.now());
+
+
       toast.success("Registration successful");
       setTimeout(() => navigate("/login/therapist"), 1200);
     } catch (err) {
