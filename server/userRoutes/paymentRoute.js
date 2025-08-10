@@ -29,22 +29,33 @@ router.post("/create-order", async (req, res) => {
 router.post("/verify-payment", async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    
 
     const body = razorpay_order_id + "|" + razorpay_payment_id;
+    console.log('Received signature:', razorpay_signature);
+//console.log('Expected signature:', expectedSignature);
+console.log('Order ID:', razorpay_order_id);
+console.log('Payment ID:', razorpay_payment_id);
 
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET)
-      .update(body.toString())
+      .update(body)
       .digest("hex");
 
-    if (expectedSignature === razorpay_signature) {
-      res.status(200).json({ success: true, message: "Payment verified" });
-    } else {
-      res.status(400).json({ success: false, message: "Invalid signature" });
-    }
+      console.log('Expected signature:', expectedSignature);
+
+    if (expectedSignature.toLowerCase().trim() === razorpay_signature.toLowerCase().trim()) {
+  return res.status(200).json({ success: true, message: "Payment verified" });
+} else {
+  return res.status(400).json({ success: false, message: "Invalid signature" });
+}
+
+
+
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 });
+
 
 module.exports = router;
