@@ -22,6 +22,7 @@ const AdminLogin = () => {
       );
       toast.success(res.data.message || 'Login successful!');
       localStorage.setItem('adminToken', res.data.token);
+      localStorage.setItem('time',Date.now());
       setTimeout(() => {
        navigate('/admin-dashboard');
       }, 1000);
