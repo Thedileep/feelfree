@@ -25,7 +25,7 @@ const LoginDocForm = () => {
         form,
         { timeout: 7000 } 
       );
-      localStorage.setItem("therapist", JSON.stringify(res.data.therapist));
+      localStorage.setItem("therapist", JSON.stringify(data.therapist));
       localStorage.setItem('doctoken', data.token);
       localStorage.setItem("doclogintime", Date.now());
 

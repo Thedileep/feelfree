@@ -1,4 +1,6 @@
 // ProtectedUserRoute.js
+import React from "react";
+
 import { Navigate, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
