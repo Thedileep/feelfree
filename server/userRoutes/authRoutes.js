@@ -63,7 +63,7 @@ router.post("/login", async (req, res) => {
 
     async function getLocation(ip) {
       try {
-        const response = await axios.get(`https://ipinfo.io/${ip}/json?token=${process.env.IPINFO_TOKEN}`);
+        const response = await axios.get(`https://ipinfo.io/${ip}?token=${process.env.IPINFO_TOKEN}`);
 
         return response.data;
       } catch {
