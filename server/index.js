@@ -41,6 +41,8 @@ app.use('/api',require('./docRoutes/doctorListRoute'))
 //admin API
 app.use('/api',require('./adminRoutes/authRoute'))
 app.use('/api',require('./adminRoutes/adminRoutes'))
+app.use('/api',require('./adminRoutes/AuditLogRoutes'))
+
 
 // Correct PORT usage
 const port = process.env.PORT || 5000;

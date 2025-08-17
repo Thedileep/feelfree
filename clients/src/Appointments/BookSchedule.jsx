@@ -10,11 +10,10 @@ export default function BookSchedule() {
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
   const [bookedTimes, setBookedTimes] = useState([]);
   const navigate = useNavigate();
 
-  // Generate all 30-min slots in a day (00:00 to 23:30)
+  // Generate all 30-min slots in a day
   const generateTimeSlots = () => {
     const slots = [];
     for (let hour = 0; hour < 24; hour++) {
@@ -26,10 +25,8 @@ export default function BookSchedule() {
     }
     return slots;
   };
-
   const timeSlots = generateTimeSlots();
 
-  // Load selected doctor from localStorage
   useEffect(() => {
     const selectedDoc = localStorage.getItem("selectedDoctor");
     if (!selectedDoc) {
@@ -39,7 +36,7 @@ export default function BookSchedule() {
     }
   }, [navigate]);
 
-  // Fetch booked times for doctor on selected date
+  // Fetch booked times
   useEffect(() => {
     if (!date || !doctor) {
       setBookedTimes([]);
@@ -49,12 +46,7 @@ export default function BookSchedule() {
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/bookings/times`,
-          {
-            params: {
-              doctorId: doctor._id,
-              date,
-            },
-          }
+          { params: { doctorId: doctor._id, date } }
         );
         setBookedTimes(res.data.bookedTimes || []);
       } catch (error) {
@@ -65,7 +57,7 @@ export default function BookSchedule() {
     fetchBookedTimes();
   }, [date, doctor]);
 
-  // Validate selected date & time
+  // Validate slot
   const validateDateTime = () => {
     setErrorMsg("");
     if (!date) {
@@ -78,7 +70,6 @@ export default function BookSchedule() {
     }
     const selectedDateTime = new Date(`${date}T${time}`);
     const now = new Date();
-
     if (selectedDateTime < now) {
       setErrorMsg("You cannot book for past date/time.");
       return false;
@@ -86,75 +77,42 @@ export default function BookSchedule() {
     return true;
   };
 
-  // Check availability from backend
-  const checkAvailability = async () => {
+  // Handle Next → Payment
+  const proceedToPayment = async () => {
+    if (!validateDateTime()) return;
+
+    setLoading(true);
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/check-availability`, {
         doctorId: doctor._id,
         date,
-        time,
+        time
       });
-  
-      return res.data.available;
-    } catch (err) {
+      if (!res.data.available) {
+        setErrorMsg("Selected slot is not available. Please choose another time.");
+        setLoading(false);
+        return;
+      }
 
+      // Save payment details for PaymentPage
+      const bookingData = { doctorId: doctor._id, doctorName: doctor.name, date, time };
+      localStorage.setItem("pendingBooking", JSON.stringify(bookingData));
+
+     navigate("/payment", {
+    state: {
+    doctorId: doctor._id,
+    name: doctor.name,
+    date,
+    time
+  }
+});
+
+    } catch (err) {
       setErrorMsg("Error checking availability. Please try again.");
-      return false;
+    } finally {
+      setLoading(false);
     }
   };
-
-  // Handle booking
- const handleBooking = async () => {
-  setErrorMsg("");
-  setSuccessMsg("");
-
-  if (!validateDateTime()) return;
-
-  setLoading(true);
-  const available = await checkAvailability();
-
-  if (!available) {
-    setErrorMsg("Selected slot is not available. Please choose another time.");
-    setLoading(false);
-    return;
-  }
-
-  try {
-    // Get userId from localStorage or context (adjust accordingly)
-    const user = JSON.parse(localStorage.getItem("user")); 
-
-    if (!user || !user._id) {
-      setErrorMsg("User not logged in");
-      setLoading(false);
-      return;
-    }
-
-    const booking = await axios.post(`${import.meta.env.VITE_API_URL}/api/bookings`, {
-      doctorId: doctor._id,
-      date,
-      time,
-      userId: user._id,
-      
-    });
-  
-    setSuccessMsg("Booking successful! Redirecting to payment...");
-    setTimeout(() => {
-      navigate(`/payment/${booking.data._id}`,{
-         state: {
-          bookingId: booking.data._id,
-          doctorId: doctor._id,
-          date,
-          time
-        }
-      });
-    }, 1500);
-  } catch (err) {
-    console.error(err);
-    setErrorMsg(err.response?.data?.message || "Booking failed. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
 
   if (!doctor) return null;
 
@@ -168,46 +126,32 @@ export default function BookSchedule() {
 
         {/* Date Picker */}
         <div className="mb-6">
-          <label className="block mb-2 font-semibold text-gray-700" htmlFor="date">
-            Select Date
-          </label>
+          <label className="block mb-2 font-semibold text-gray-700">Select Date</label>
           <input
             type="date"
-            id="date"
-            className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            min={new Date().toISOString().split("T")[0]} 
+            min={new Date().toISOString().split("T")[0]}
+            className="w-full border border-gray-300 rounded px-4 py-2"
           />
         </div>
 
-        {/* Time Picker Dropdown */}
+        {/* Time Picker */}
         <div className="mb-6">
-          <label className="block mb-2 font-semibold text-gray-700" htmlFor="time">
-            Select Time (30-minute slots)
-          </label>
+          <label className="block mb-2 font-semibold text-gray-700">Select Time</label>
           <select
-            id="time"
-            className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             value={time}
             onChange={(e) => setTime(e.target.value)}
+            className="w-full border border-gray-300 rounded px-4 py-2"
           >
             <option value="">Select a time</option>
             {timeSlots.map((slot) => {
-              // Disable booked times and past times if date is today
               const slotDateTime = new Date(`${date}T${slot}`);
               const now = new Date();
-
               const isBooked = bookedTimes.includes(slot);
               const isPastTime = date === new Date().toISOString().split("T")[0] && slotDateTime < now;
-
               return (
-                <option
-                  key={slot}
-                  value={slot}
-                  disabled={isBooked || isPastTime}
-                  title={isBooked ? "Already booked" : isPastTime ? "Past time" : ""}
-                >
+                <option key={slot} value={slot} disabled={isBooked || isPastTime}>
                   {slot}
                 </option>
               );
@@ -215,18 +159,10 @@ export default function BookSchedule() {
           </select>
         </div>
 
-        {/* Error Message */}
-        {errorMsg && (
-          <p className="mb-4 text-red-600 font-semibold text-center">{errorMsg}</p>
-        )}
-
-        {/* Success Message */}
-        {successMsg && (
-          <p className="mb-4 text-green-600 font-semibold text-center">{successMsg}</p>
-        )}
+        {errorMsg && <p className="mb-4 text-red-600 font-semibold text-center">{errorMsg}</p>}
 
         <button
-          onClick={handleBooking}
+          onClick={proceedToPayment}
           disabled={loading}
           className={`w-full py-3 font-semibold text-white rounded-lg transition ${
             loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"

@@ -71,8 +71,22 @@ const AdminDashboard = () => {
      <h1 className="text-2xl font-bold mb-6 text-center">Therapist Approval Dashboard</h1>
 
       <button
+      className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      onClick={() => navigate("/admin/audit-logs")}
+    >
+      View  User Audit Logs
+    </button>
+
+       <button
+      className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      onClick={() => navigate("/admin/doc-audit-logs")}
+    >
+      View Therapist Audit Logs
+    </button>
+     
+      <button
           variant="destructive"
-          className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-md transition-all"
+          className="ml-auto flex items-center gap-1 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-md transition-all"
           onClick={() => {
             localStorage.removeItem('adminToken');
             toast.success('Successfully Logout',{autoClose:2000});
@@ -198,7 +212,8 @@ const AdminDashboard = () => {
           </tbody>
         </table>
       )}
-     
+      
+  
     </div>
   );
 };

@@ -20,7 +20,6 @@ const PaymentPage = () => {
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     script.onload = () => {
-      console.log("✅ Razorpay script loaded");
       setRazorpayLoaded(true);
     };
     script.onerror = () => {
@@ -45,11 +44,7 @@ const PaymentPage = () => {
       // 1️⃣ Create payment order
       const { data } = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/payments/create-order`,
-        {
-          amount: 1, // in INR
-          currency: "INR",
-          receipt: `booking_${Date.now()}`
-        }
+        { amount: 1 }
       );
 
       if (!data.success) {
@@ -66,35 +61,44 @@ const PaymentPage = () => {
         description: "Payment for booking",
         order_id: data.order.id,
         handler: async function (response) {
-          
           try {
+            // ✅ Send exact keys expected by backend
             const verifyRes = await axios.post(
               `${import.meta.env.VITE_API_URL}/api/payments/verify-payment`,
-              response
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              }
             );
 
             if (verifyRes.data.success) {
               toast.success("Payment Successful!");
 
               const bookingRes = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/book-appointment`,
-                {
-                  userId: storedUser._id,
-                  therapistId: state._id, 
-                  date: state.date,
-                  time: state.time,
-                  status: "Confirmed",
-                  amount: 1
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-              );
+              `${import.meta.env.VITE_API_URL}/api/bookings`,
+              {
+                userId: storedUser._id,
+                doctorId: state.doctorId,
+                date: state.date,
+                time: state.time,
+                status: "Confirmed",
+                amount: 1
+              },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
 
-              navigate("/booking-success");
+            // booking ID from backend response
+            const bookingId = bookingRes.data._id || bookingRes.data.booking?._id;
+
+            navigate(`/track-appointment/${bookingId}`);
+
+
             } else {
               toast.error("Payment verification failed");
             }
           } catch (error) {
-            toast.error("Error verifying payment",error);
+            toast.error(`Error verifying payment: ${error.message}`);
           }
         },
         theme: {
@@ -105,7 +109,7 @@ const PaymentPage = () => {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      toast.error("Payment failed!",err);
+      toast.error(`Payment failed! ${err.message}`);
     }
   };
 
@@ -119,10 +123,10 @@ const PaymentPage = () => {
       <div className="min-h-screen bg-blue-50 flex justify-center items-center">
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
           <h2 className="text-2xl font-bold mb-6 text-blue-700">Payment</h2>
-          <p>Therapist ID: {state._id}</p>
+          <p>Therapist Name: {state.name}</p>
           <p>Date: {state.date}</p>
           <p>Time: {state.time}</p>
-          <p className="mb-6 text-green-600 font-bold">Amount: ₹500</p>
+          <p className="mb-6 text-green-600 font-bold">Amount: ₹1</p>
 
           <button
             onClick={handlePayment}
@@ -132,9 +136,8 @@ const PaymentPage = () => {
           </button>
         </div>
       </div>
-       <Footer/>
+      <Footer />
     </>
-   
   );
 };
 

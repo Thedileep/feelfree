@@ -16,10 +16,12 @@ const Body = () => {
         </svg>
       </div>
 
+      {/* Left Content */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.3 }} // 👈 Scroll down/up dono pe chalega
+        transition={{ duration: 0.7 }}
         className="md:w-1/2 space-y-6 z-10"
       >
         <h2 className="text-5xl font-extrabold text-indigo-800 dark:text-indigo-300 leading-tight">
@@ -30,22 +32,33 @@ const Body = () => {
           <span className="font-semibold">Feel safe. Feel heard. Feel free.</span>
         </p>
         <div className="flex flex-wrap gap-4">
-          <Link to="/register/user" className="px-6 py-3 bg-pink-500 text-white font-semibold rounded-full hover:bg-pink-600 transition shadow">
+          <Link
+            to="/register/user"
+            className="px-6 py-3 bg-pink-500 text-white font-semibold rounded-full hover:bg-pink-600 transition shadow"
+          >
             I'm a User
           </Link>
-          <Link to="/register/therapist" className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-full hover:bg-purple-700 transition shadow">
+          <Link
+            to="/register/therapist"
+            className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-full hover:bg-purple-700 transition shadow"
+          >
             I'm a Therapist
           </Link>
-          <Link to="/login/user" className="px-6 py-3 bg-white dark:bg-gray-800 border border-indigo-600 text-indigo-600 dark:text-indigo-300 font-semibold rounded-full hover:bg-indigo-50 dark:hover:bg-gray-700 transition">
+          <Link
+            to="/login/user"
+            className="px-6 py-3 bg-white dark:bg-gray-800 border border-indigo-600 text-indigo-600 dark:text-indigo-300 font-semibold rounded-full hover:bg-indigo-50 dark:hover:bg-gray-700 transition"
+          >
             I Have an Account
           </Link>
         </div>
       </motion.div>
 
+      {/* Right Image */}
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6 }}
+        whileInView={{ scale: 1, opacity: 1 }}
+        viewport={{ once: false, amount: 0.3 }}
+        transition={{ duration: 0.7 }}
         className="md:w-1/2 mb-10 md:mb-0 flex justify-center z-10"
       >
         <img

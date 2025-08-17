@@ -26,6 +26,8 @@ import PrivacyPolicy from "./homePages/PrivacyPolicy";
 import CancellationRefund from "./homePages/Refund";
 import ContactUs from "./homePages/Contact";
 import ScrollToTop from "./components/ScrollToTop";
+import TrackAppointment from "./userPages/TrackAppointment";
+import AppointmentsList from "./Appointments/AppointmentList";
 
 function App() {
   return (
@@ -82,7 +84,7 @@ function App() {
         />
 
         <Route
-          path="/payment/:id"
+          path="/payment"
           element={
             <ProtectedRoute>
               <PaymentPage />
@@ -90,6 +92,24 @@ function App() {
           }
         />
 
+        <Route
+          path="/track-appointment/:id"
+          element={
+            <ProtectedRoute>
+              <TrackAppointment />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/appointments-list"
+          element={
+            <ProtectedRoute>
+              <AppointmentsList />
+            </ProtectedRoute>
+          }
+        />
+          
         <Route
           path="/chat"
           element={

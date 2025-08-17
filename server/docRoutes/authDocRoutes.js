@@ -1,14 +1,40 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const Therapist = require('../models/registerDocModel');
-
-const router = express.Router();
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const { storage,fileFilter } = require('../docRoutes/cloudStorage');
+const axios = require('axios');
+
+const Therapist = require('../models/registerDocModel');
+const DoctorAuditLog = require('../models/docAuditLog'); 
+const { storage, fileFilter } = require('../docRoutes/cloudStorage');
+
+const router = express.Router();
 const upload = multer({ storage, fileFilter });
 
+// Helper to get IP, device, and location
+async function getRequestMeta(req) {
+  const ip =
+    req.headers["x-forwarded-for"]?.split(",").shift() ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||
+    req.connection.socket?.remoteAddress ||
+    "";
 
+  const deviceInfo = req.headers["user-agent"] || "";
+  const timestamp = new Date();
+
+  let location = null;
+  try {
+    const response = await axios.get(`https://ipinfo.io/${ip}?token=${process.env.IPINFO_TOKEN}`);
+    location = response.data;
+  } catch {
+    location = null;
+  }
+
+  return { ip, deviceInfo, timestamp, location };
+}
+
+// Therapist Registration
 router.post(
   '/register-therapist',
   upload.fields([
@@ -16,9 +42,8 @@ router.post(
     { name: 'degree', maxCount: 1 }
   ]),
   async (req, res) => {
-
     try {
-        const {
+      const {
         name, email, phone, dob, nationality,
         occupation, experience, address, specialization,
         licenseNumber, password
@@ -50,6 +75,18 @@ router.post(
       });
 
       await therapist.save();
+
+      // Create audit log
+      const meta = await getRequestMeta(req);
+      await DoctorAuditLog.create({
+        therapistId: therapist._id,
+        action: 'REGISTER',
+        ipAddress: meta.ip,
+        deviceInfo: meta.deviceInfo,
+        timestamp: meta.timestamp,
+        location: meta.location
+      });
+
       res.status(201).json({ message: 'Therapist registered successfully' });
     } catch (err) {
       console.error('❌ Registration Error:', err.message);
@@ -62,8 +99,7 @@ router.post(
   }
 );
 
-// Login route
-
+// Therapist Login
 router.post('/login-therapist', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -72,7 +108,20 @@ router.post('/login-therapist', async (req, res) => {
     if (!therapist) return res.status(404).json({ message: 'User not found' });
 
     const isMatch = await bcrypt.compare(password, therapist.password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid password' });
+    if (!isMatch) {
+      // Log failed login
+      const meta = await getRequestMeta(req);
+      await DoctorAuditLog.create({
+        therapistId: therapist._id,
+        action: 'LOGIN_FAILED',
+        ipAddress: meta.ip,
+        deviceInfo: meta.deviceInfo,
+        timestamp: meta.timestamp,
+        location: meta.location
+      });
+
+      return res.status(401).json({ message: 'Invalid password' });
+    }
 
     if (!therapist.isApproved) {
       return res.status(403).json({
@@ -86,6 +135,17 @@ router.post('/login-therapist', async (req, res) => {
       { expiresIn: '1h' }
     );
 
+    // Log successful login
+    const meta = await getRequestMeta(req);
+    await DoctorAuditLog.create({
+      therapistId: therapist._id,
+      action: 'LOGIN_SUCCESS',
+      ipAddress: meta.ip,
+      deviceInfo: meta.deviceInfo,
+      timestamp: meta.timestamp,
+      location: meta.location
+    });
+
     res.status(200).json({ token, user: therapist });
   } catch (err) {
     console.error(err);
@@ -93,6 +153,4 @@ router.post('/login-therapist', async (req, res) => {
   }
 });
 
-
 module.exports = router;
-

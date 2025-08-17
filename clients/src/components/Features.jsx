@@ -9,7 +9,6 @@ import {
   Lightbulb,
   ShieldCheck,
   Star,
-  HeartHandshake,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -76,6 +75,7 @@ const therapists = [
   },
 ];
 
+// Feature Card
 const FeatureCard = ({ icon, title, desc, link }) => {
   const navigate = useNavigate();
   return (
@@ -83,6 +83,10 @@ const FeatureCard = ({ icon, title, desc, link }) => {
       whileHover={{ y: -5, scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => link && navigate(link)}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: false, amount: 0.2 }}
+      transition={{ duration: 0.6 }}
       className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-md hover:shadow-lg transition-all flex flex-col items-center text-center cursor-pointer"
     >
       <div className="mb-4 text-indigo-600 dark:text-indigo-400">{icon}</div>
@@ -94,9 +98,16 @@ const FeatureCard = ({ icon, title, desc, link }) => {
   );
 };
 
+// Therapist Card
 const TherapistCard = ({ name, experience, rating, specialty }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow hover:shadow-lg transition">
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: false, amount: 0.2 }}
+      transition={{ duration: 0.6 }}
+      className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow hover:shadow-lg transition"
+    >
       <h4 className="text-lg font-semibold mb-1">{name}</h4>
       <p className="text-gray-600 dark:text-gray-300 mb-1">
         Experience: {experience}
@@ -108,7 +119,7 @@ const TherapistCard = ({ name, experience, rating, specialty }) => {
         <Star size={18} fill="currentColor" />
         <span>{rating}</span>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -119,7 +130,8 @@ const FeaturesSection = () => {
       <section className="py-20 px-6 sm:px-8 text-center bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false }}
           transition={{ duration: 0.8 }}
           className="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6"
         >
@@ -127,7 +139,8 @@ const FeaturesSection = () => {
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: false }}
           transition={{ delay: 0.3, duration: 0.8 }}
           className="max-w-2xl mx-auto text-base sm:text-lg md:text-xl mb-8 text-white/90"
         >
@@ -145,7 +158,13 @@ const FeaturesSection = () => {
       </section>
 
       {/* About Section */}
-      <section className="py-16 px-6 sm:px-8 max-w-5xl mx-auto text-center">
+      <motion.section
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.3 }}
+        transition={{ duration: 0.8 }}
+        className="py-16 px-6 sm:px-8 max-w-5xl mx-auto text-center"
+      >
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6">
           Our Mission
         </h2>
@@ -160,13 +179,19 @@ const FeaturesSection = () => {
           an appointment to keeping a daily journal, everything is designed to
           make your journey to mental wellness easier.
         </p>
-      </section>
+      </motion.section>
 
       {/* Therapist Section */}
       <section className="py-20 px-6 sm:px-8 bg-gray-50 dark:bg-gray-800">
-        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-12">
+        <motion.h3
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false }}
+          transition={{ duration: 0.8 }}
+          className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-12"
+        >
           Meet Our Top-Rated Therapists
-        </h3>
+        </motion.h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {therapists.map((t, i) => (
             <TherapistCard key={i} {...t} />
@@ -176,9 +201,15 @@ const FeaturesSection = () => {
 
       {/* Features Section */}
       <section className="py-20 px-6 sm:px-8 bg-white dark:bg-gray-900">
-        <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-12">
+        <motion.h3
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false }}
+          transition={{ duration: 0.8 }}
+          className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-12"
+        >
           All the Care in One Place
-        </h3>
+        </motion.h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10 max-w-6xl mx-auto">
           {features.map((f, i) => (
             <FeatureCard key={i} {...f} />
@@ -187,7 +218,13 @@ const FeaturesSection = () => {
       </section>
 
       {/* Call to Action */}
-      <section className="py-16 px-6 sm:px-8 text-center bg-indigo-600 text-white">
+      <motion.section
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false }}
+        transition={{ duration: 0.8 }}
+        className="py-16 px-6 sm:px-8 text-center bg-indigo-600 text-white"
+      >
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
           Ready to Take Care of Your Mind?
         </h2>
@@ -203,7 +240,7 @@ const FeaturesSection = () => {
         >
           Sign Up Now
         </motion.button>
-      </section>
+      </motion.section>
     </div>
   );
 };

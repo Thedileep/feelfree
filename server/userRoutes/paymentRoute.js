@@ -1,61 +1,66 @@
-const express = require("express");
+const router = require("express").Router();
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 
-const router = express.Router();
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_SECRET,
-});
-
+// Create Order
 router.post("/create-order", async (req, res) => {
   try {
-    const { amount, currency, receipt } = req.body;
+    if (!req.body.amount || isNaN(req.body.amount)) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
+
+    const instance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_SECRET,
+    });
 
     const options = {
-      amount: amount * 100,
-      currency: currency || "INR",
-      receipt: receipt || `receipt_${Date.now()}`,
+      amount: req.body.amount * 100, // in paise
+      currency: "INR",
+      receipt: crypto.randomBytes(10).toString("hex"),
     };
 
-    const order = await razorpay.orders.create(options);
+    const order = await instance.orders.create(options);
     res.status(200).json({ success: true, order });
+
+
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error!" });
   }
 });
 
+// Verify Payment
 router.post("/verify-payment", async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    } = req.body;
 
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    console.log('Received signature:', razorpay_signature);
-//console.log('Expected signature:', expectedSignature);
-console.log('Order ID:', razorpay_order_id);
-console.log('Payment ID:', razorpay_payment_id);
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ message: "Missing payment details" });
+    }
 
-    const expectedSignature = crypto
+    const sign = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSign = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET)
-      .update(body)
+      .update(sign.toString())
       .digest("hex");
 
-      console.log('Expected signature:', expectedSignature);
+    if (razorpay_signature === expectedSign) {
+      return res.status(200).json({ success: true, message: "Payment verified successfully" });
 
-    if (expectedSignature.toLowerCase().trim() === razorpay_signature.toLowerCase().trim()) {
-  return res.status(200).json({ success: true, message: "Payment verified" });
-} else {
-  return res.status(400).json({ success: false, message: "Invalid signature" });
-}
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid signature" });
 
-
+    }
 
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error!" });
   }
 });
-
 
 module.exports = router;

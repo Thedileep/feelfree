@@ -115,19 +115,23 @@ const DashboardDoc = () => {
         </div>
 
         {/* ✅ Sidebar Drawer for Mobile */}
-        {sidebarOpen && (
-          <div className="sm:hidden fixed inset-0 bg-black bg-opacity-40 z-50" onClick={() => setSidebarOpen(false)}>
-            <div
-              className="bg-white w-64 h-full shadow-lg p-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <SidebarDoc selected={selected} setSelected={setSelected} handleLogout={handleLogout} />
-            </div>
-          </div>
-        )}
+       {sidebarOpen && (
+  <div
+    className="sm:hidden fixed inset-0 bg-white bg-opacity-40 z-50"
+    onClick={() => setSidebarOpen(false)}  
+  >
+    <div
+      className="bg-white w-120 max-w-full h-full shadow-lg p-4"
+      onClick={(e) => e.stopPropagation()}  
+    >
+      <SidebarDoc selected={selected} setSelected={setSelected} handleLogout={handleLogout} />
+    </div>
+  </div>
+)}
+
 
         {/* ✅ Main Content */}
-        <div className="flex-1 p-4 sm:p-6">
+        <div className="flex-1 p-4 sm:p-6 min-w-0 overflow-auto">
           <h1 className="text-3xl font-bold mb-6 text-center text-indigo-700">
             Therapist Dashboard
           </h1>

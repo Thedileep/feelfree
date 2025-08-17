@@ -6,6 +6,7 @@ import DashboardCard from "../components/DashboardCard";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AppointmentsList from "../Appointments/AppointmentList";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const Dashboard = () => {
         </h2>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+
           <DashboardCard
             title="Mood Tracker"
             description="Track your daily emotions and understand patterns."
@@ -32,18 +34,28 @@ const Dashboard = () => {
           />
 
           <DashboardCard
+            title="Book Scheduling"
+            description="Book an appointment with a therapist."
+            icon="📅"
+            onClick={() => navigate("/select-doctor")}
+          />
+
+            <DashboardCard
+            title="Appointments"
+            description="View and track all your booked appointments."
+            icon="🩺"
+            onClick={() => navigate("/appointments-list")}
+          />
+
+
+          <DashboardCard
             title="Journal"
             description="Write and reflect your thoughts safely."
             icon="📖"
             onClick={() => navigate("/journal")}
           />
 
-          <DashboardCard
-            title="Book Scheduling"
-            description="Book an appointment with a therapist."
-            icon="📅"
-            onClick={() => navigate("/select-doctor")}
-          />
+          
 
           <DashboardCard
             title="Community"

@@ -6,6 +6,8 @@ import AdminDashboard from "./adminpages/AdminDashboard";
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import UserAuditLogs from "./adminpages/UserAuditLog";
+import DocAuditLog from "./adminpages/DocAuditLog"
 
 function App() {
   return (
@@ -19,6 +21,24 @@ function App() {
           element={
             <ProtectedAdmin>
               <AdminDashboard/>
+            </ProtectedAdmin>
+          }
+        />
+
+        <Route
+          path="/admin/audit-logs"
+          element={
+            <ProtectedAdmin>
+              <UserAuditLogs/>
+            </ProtectedAdmin>
+          }
+        />
+
+        <Route
+          path="/admin/doc-audit-logs"
+          element={
+            <ProtectedAdmin>
+              <DocAuditLog/>
             </ProtectedAdmin>
           }
         />
