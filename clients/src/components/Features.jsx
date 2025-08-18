@@ -124,6 +124,7 @@ const TherapistCard = ({ name, experience, rating, specialty }) => {
 };
 
 const FeaturesSection = () => {
+  const navigate=useNavigate();
   return (
     <div className="dark:bg-gray-900 dark:text-white">
       {/* Hero Section */}
@@ -150,7 +151,7 @@ const FeaturesSection = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
-          onClick={() => (window.location.href = "/select-doctor")}
+          onClick={() => navigate("/select-doctor")}
           className="bg-white text-indigo-600 font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-full shadow-lg hover:bg-gray-100"
         >
           Get Started
@@ -235,7 +236,7 @@ const FeaturesSection = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
-          onClick={() => (window.location.href = "/register/user")}
+          onClick={() => navigate('/register/user')}
           className="bg-white text-indigo-600 font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-full shadow-lg hover:bg-gray-100"
         >
           Sign Up Now

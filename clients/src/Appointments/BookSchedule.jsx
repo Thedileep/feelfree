@@ -13,6 +13,8 @@ export default function BookSchedule() {
   const [bookedTimes, setBookedTimes] = useState([]);
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("token"); 
+
   // Generate all 30-min slots in a day
   const generateTimeSlots = () => {
     const slots = [];
@@ -46,7 +48,8 @@ export default function BookSchedule() {
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/bookings/times`,
-          { params: { doctorId: doctor._id, date } }
+          { params: { doctorId: doctor._id, date } },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setBookedTimes(res.data.bookedTimes || []);
       } catch (error) {
@@ -87,7 +90,9 @@ export default function BookSchedule() {
         doctorId: doctor._id,
         date,
         time
-      });
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
       if (!res.data.available) {
         setErrorMsg("Selected slot is not available. Please choose another time.");
         setLoading(false);

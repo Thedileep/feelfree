@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const SidebarDoc = ({ selected, setSelected, handleLogout }) => {
+const SidebarDoc = ({ selected, setSelected, handleLogout, setMobileMenuOpen }) => {
   const menuItems = [
     { key: "home", label: "Home", link: "/" },
     { key: "appointments", label: "Appointments" },
@@ -10,9 +10,9 @@ const SidebarDoc = ({ selected, setSelected, handleLogout }) => {
   ];
 
   return (
-    <div className="bg-indigo-700 text-white min-h-screen p-6 w-full sm:w-64 flex flex-col">
+    <div className="bg-indigo-700 text-white min-h-screen p-6 w-56 sm:w-64 flex flex-col">
       {/* Title */}
-      <h1 className="text-2xl font-bold mb-8 sm:mb-8 sticky top-0 bg-indigo-700 py-2">
+      <h1 className="text-2xl font-bold mb-8 sticky top-0 bg-indigo-700 py-2">
         FeelFree
       </h1>
 
@@ -23,6 +23,10 @@ const SidebarDoc = ({ selected, setSelected, handleLogout }) => {
             {item.link ? (
               <Link
                 to={item.link}
+                onClick={() => {
+                  setSelected(item.key);
+                  setMobileMenuOpen(false); 
+                }}
                 className={`block w-full text-left py-2 px-3 rounded-lg transition ${
                   selected === item.key
                     ? "bg-indigo-500"
@@ -33,7 +37,10 @@ const SidebarDoc = ({ selected, setSelected, handleLogout }) => {
               </Link>
             ) : (
               <button
-                onClick={() => setSelected(item.key)}
+                onClick={() => {
+                  setSelected(item.key);
+                  setMobileMenuOpen(false); 
+                }}
                 className={`w-full text-left py-2 px-3 rounded-lg transition ${
                   selected === item.key
                     ? "bg-indigo-500"
@@ -49,7 +56,10 @@ const SidebarDoc = ({ selected, setSelected, handleLogout }) => {
 
       {/* Logout Button */}
       <button
-        onClick={handleLogout}
+        onClick={() => {
+          handleLogout();
+          setMobileMenuOpen(false);
+        }}
         className="mt-8 w-full bg-red-500 hover:bg-red-600 py-2 px-3 rounded-lg transition"
       >
         Logout

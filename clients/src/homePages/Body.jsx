@@ -20,7 +20,7 @@ const Body = () => {
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, amount: 0.3 }} // 👈 Scroll down/up dono pe chalega
+        viewport={{ once: false, amount: 0.3 }} 
         transition={{ duration: 0.7 }}
         className="md:w-1/2 space-y-6 z-10"
       >

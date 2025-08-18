@@ -59,7 +59,7 @@ const Navbar = () => {
         <li><Link to="/features" className="hover:text-blue-600">Features</Link></li>
         <li><Link to="/mood-tracker" className="hover:text-blue-600">Mood Tracker</Link></li>
         <li><Link to="/community" className="hover:text-blue-600">Community</Link></li>
-        <li><Link to="/contact" className="hover:text-blue-600">Contact</Link></li>
+        <li><Link to="/contact-us" className="hover:text-blue-600">Contact</Link></li>
       </ul>
 
       {/* Desktop Auth Button */}

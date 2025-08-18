@@ -110,24 +110,34 @@ const DashboardDoc = () => {
 
       <div className="flex flex-1">
         {/* ✅ Sidebar for Desktop */}
-        <div className="hidden sm:block w-64 bg-white shadow-lg">
-          <SidebarDoc selected={selected} setSelected={setSelected} handleLogout={handleLogout} />
-        </div>
+      <div className="hidden sm:block w-64 bg-white shadow-lg">
+        <SidebarDoc
+          selected={selected}
+          setSelected={setSelected}
+          handleLogout={handleLogout}
+        />
+      </div>
 
-        {/* ✅ Sidebar Drawer for Mobile */}
-       {sidebarOpen && (
-  <div
-    className="sm:hidden fixed inset-0 bg-white bg-opacity-40 z-50"
-    onClick={() => setSidebarOpen(false)}  
-  >
-    <div
-      className="bg-white w-120 max-w-full h-full shadow-lg p-4"
-      onClick={(e) => e.stopPropagation()}  
-    >
-      <SidebarDoc selected={selected} setSelected={setSelected} handleLogout={handleLogout} />
-    </div>
-  </div>
-)}
+      {/* ✅ Sidebar Drawer for Mobile */}
+      {sidebarOpen && (
+        <div
+          className="sm:hidden fixed inset-0 bg-black bg-opacity-40 z-50"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <div
+            className="bg-white w-72 max-w-full h-full shadow-lg p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SidebarDoc
+              selected={selected}
+              setSelected={setSelected}
+              handleLogout={handleLogout}
+              setSidebarOpen={setSidebarOpen}   
+            />
+          </div>
+        </div>
+      )}
+
 
 
         {/* ✅ Main Content */}
