@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FaPaperPlane, FaSmile, FaPaperclip, FaCamera, FaMicrophone } from "react-icons/fa";
 import EmojiPicker from "emoji-picker-react";
-import { sendMediaHelper, startRecording, capturePhoto } from "./mediaUtils";
+import { sendMediaHelper, startRecording, capturePhoto } from "./Mediautils";
 import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL;
