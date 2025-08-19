@@ -6,10 +6,11 @@ import DashboardCard from "../components/DashboardCard";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AppointmentsList from "../Appointments/AppointmentList";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const username=localStorage.getItem("username");
+
 
   const handleFeatureClick = (feature) => {
     // You can route to other pages or modal logic
@@ -21,7 +22,7 @@ const Dashboard = () => {
       <Navbar />
       <div className="min-h-screen bg-blue-50 p-6">
         <h2 className="text-3xl font-bold text-center mb-8 text-blue-700">
-          Welcome to Your Dashboard
+          Welcome {username} to Your Dashboard
         </h2>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">

@@ -7,7 +7,9 @@ export default function AppointmentInfo({ booking }) {
         Appointment with {booking.doctorId?.name}
       </h1>
       <p className="mb-2">Date: {booking.date}</p>
-      <p className="mb-2">Time: {booking.time}</p>
+       <p className="mb-2">
+        Time: {booking.time ? booking.time : "Not selected"}
+      </p>
       <p className="mb-4">Status: {booking.status}</p>
     </>
   );

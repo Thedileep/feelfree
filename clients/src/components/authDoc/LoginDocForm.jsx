@@ -20,14 +20,16 @@ const LoginDocForm = () => {
     if (loading) return;
     setLoading(true);
     try {
-      const { data } = await axios.post(
+      const res  = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/login-therapist`,
         form,
         { timeout: 7000 } 
       );
-      localStorage.setItem("therapist", JSON.stringify(data.therapist));
-      localStorage.setItem('doctoken', data.token);
-      localStorage.setItem("doclogintime", Date.now());
+     localStorage.setItem("doctor", JSON.stringify(res.data.doctor));
+    localStorage.setItem("doctoken", res.data.token);
+    localStorage.setItem("doclogintime", Date.now());
+    localStorage.setItem("doctorname", res.data.doctor.name);
+
 
       toast.success('Login successful', { autoClose: 1500 });
       navigate('/therapist-dashboard');

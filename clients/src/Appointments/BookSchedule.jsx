@@ -47,10 +47,14 @@ export default function BookSchedule() {
     const fetchBookedTimes = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/bookings/times`,
-          { params: { doctorId: doctor._id, date } },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        `${import.meta.env.VITE_API_URL}/api/bookings/times`,
+        {
+          params: { doctorId: doctor._id, date },
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+
         setBookedTimes(res.data.bookedTimes || []);
       } catch (error) {
         console.error("Failed to fetch booked times", error);
@@ -141,28 +145,32 @@ export default function BookSchedule() {
           />
         </div>
 
-        {/* Time Picker */}
-        <div className="mb-6">
-          <label className="block mb-2 font-semibold text-gray-700">Select Time</label>
-          <select
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="w-full border border-gray-300 rounded px-4 py-2"
-          >
-            <option value="">Select a time</option>
-            {timeSlots.map((slot) => {
+       {/* Time Picker */}
+      <div className="mb-6">
+        <label className="block mb-2 font-semibold text-gray-700">Select Time</label>
+        <select
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          className="w-full border border-gray-300 rounded px-4 py-2"
+        >
+          <option value="">Select a time</option>
+          {timeSlots
+            .filter((slot) => {
               const slotDateTime = new Date(`${date}T${slot}`);
               const now = new Date();
-              const isBooked = bookedTimes.includes(slot);
-              const isPastTime = date === new Date().toISOString().split("T")[0] && slotDateTime < now;
-              return (
-                <option key={slot} value={slot} disabled={isBooked || isPastTime}>
-                  {slot}
-                </option>
-              );
-            })}
-          </select>
-        </div>
+              const isBooked = bookedTimes.includes(slot); // ✅ backend normalized
+              const isPastTime =
+                date === new Date().toISOString().split("T")[0] && slotDateTime < now;
+              return !isBooked && !isPastTime;
+            })
+            .map((slot) => (
+              <option key={slot} value={slot}>
+                {slot}
+              </option>
+            ))}
+        </select>
+      </div>
+
 
         {errorMsg && <p className="mb-4 text-red-600 font-semibold text-center">{errorMsg}</p>}
 

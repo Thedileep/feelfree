@@ -56,9 +56,9 @@ const NavbarDoc = () => {
       {/* Desktop Menu */}
       <ul className="hidden md:flex gap-6 text-gray-700 font-medium">
         <li><Link to="/" className="hover:text-indigo-600">Home</Link></li>
-        <li><Link to="/about" className="hover:text-indigo-600">About</Link></li>
+        <li><Link to="/about-us" className="hover:text-indigo-600">About</Link></li>
         <li><Link to="/services" className="hover:text-indigo-600">Services</Link></li>
-        <li><Link to="/contact" className="hover:text-indigo-600">Contact</Link></li>
+        <li><Link to="/contact-us" className="hover:text-indigo-600">Contact</Link></li>
       </ul>
 
       {/* Desktop Auth Button */}

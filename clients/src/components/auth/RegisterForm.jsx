@@ -30,11 +30,14 @@ const RegisterForm = () => {
     setLoading(true);
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/register`, formData, {
-        timeout: 2000, 
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/register`, formData, {
+        timeout: 2000,
       });
+
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("logintime", Date.now());
+      localStorage.setItem("username", res.data.user.name);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
       toast.success('User registered successfully', { autoClose: 1500 });
       navigate('/dashboard');

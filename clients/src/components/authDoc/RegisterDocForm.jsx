@@ -63,14 +63,16 @@ const TherapistRegister = () => {
     }
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/register-therapist`, data, {
+      const res=await axios.post(`${import.meta.env.VITE_API_URL}/api/register-therapist`, data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      localStorage.setItem("doctoken", res.data.token);
-      localStorage.setItem("doclogintime", Date.now());
+    localStorage.setItem("doctor", JSON.stringify(res.data.doctor));
+    localStorage.setItem("doctoken", res.data.token);
+    localStorage.setItem("doclogintime", Date.now());
+    localStorage.setItem("doctorname", res.data.doctor.name);
 
 
       toast.success("Registration successful");
@@ -80,8 +82,6 @@ const TherapistRegister = () => {
       toast.error("Error: " + msg);
     }
   };
-
-
 
   return (
     <div className="min-h-screen bg-indigo-50 flex items-center justify-center px-4">

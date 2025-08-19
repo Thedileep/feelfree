@@ -4,10 +4,15 @@ const Booking = require('../models/booking');
 const Therapist = require('../models/registerDocModel');
 const User = require('../models/registerModels'); 
 const mongoose = require('mongoose');
-const authMiddleware=require('../middleware/authMiddleware')
-// POST /api/check-availability
+const authMiddleware = require('../middleware/authMiddleware');
 
-router.post('/check-availability',authMiddleware, async (req, res) => {
+const normalizeTime = (time) => {
+  const [h, m] = time.split(":");
+  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+};
+
+// POST /api/check-availability
+router.post('/check-availability', authMiddleware, async (req, res) => {
   const { doctorId, date, time } = req.body;
 
   if (!doctorId || !date || !time) {
@@ -15,14 +20,19 @@ router.post('/check-availability',authMiddleware, async (req, res) => {
   }
 
   try {
-    // Check if doctor exists
     const doctorExists = await Therapist.exists({ _id: doctorId });
     if (!doctorExists) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    // Check if the slot is already booked
-    const existingBooking = await Booking.findOne({ doctorId, date, time, status: { $ne: 'cancelled' } });
+    const normalizedTime = normalizeTime(time);
+
+    const existingBooking = await Booking.findOne({ 
+      doctorId, 
+      date, 
+      time: normalizedTime, 
+      status: { $ne: 'cancelled' } 
+    });
 
     if (existingBooking) {
       return res.json({ available: false });
@@ -36,36 +46,36 @@ router.post('/check-availability',authMiddleware, async (req, res) => {
 });
 
 
-router.post('/bookings', authMiddleware,async (req, res) => {
+// POST /api/bookings
+router.post('/bookings', authMiddleware, async (req, res) => {
   const { doctorId, date, time, userId } = req.body;
 
   if (!doctorId || !date || !time || !userId) {
     return res.status(400).json({ message: 'doctorId, date, time, and userId required' });
   }
 
+  const normalizedTime = normalizeTime(time);
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // 1️⃣ Check doctor exists
     const doctorExists = await Therapist.exists({ _id: doctorId }).session(session);
     if (!doctorExists) {
       await session.abortTransaction();
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    // 2️⃣ Check user exists
     const userExists = await User.exists({ _id: userId }).session(session);
     if (!userExists) {
       await session.abortTransaction();
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // 3️⃣ Check slot availability inside the transaction
     const existingBooking = await Booking.findOne({
       doctorId,
       date,
-      time,
+      time: normalizedTime,
       status: { $ne: 'cancelled' }
     }).session(session);
 
@@ -74,18 +84,15 @@ router.post('/bookings', authMiddleware,async (req, res) => {
       return res.status(409).json({ message: 'Slot already booked' });
     }
 
-    // 4️⃣ Create booking
     const booking = new Booking({
       doctorId,
       date,
-      time,
+      time: normalizedTime,   
       userId,
-      status: 'confirmed' 
+      status: 'confirmed'
     });
 
     await booking.save({ session });
-
-    // 5️⃣ Commit transaction
     await session.commitTransaction();
     session.endSession();
 
@@ -99,8 +106,8 @@ router.post('/bookings', authMiddleware,async (req, res) => {
 });
 
 
-// GET /api/bookings/times?doctorId=...&date=...
-router.get('/bookings/times',authMiddleware, async (req, res) => {
+// GET /api/bookings/times
+router.get('/bookings/times', authMiddleware, async (req, res) => {
   const { doctorId, date } = req.query;
 
   if (!doctorId || !date) {
@@ -114,7 +121,7 @@ router.get('/bookings/times',authMiddleware, async (req, res) => {
       status: { $ne: 'cancelled' }
     }).select('time -_id'); 
 
-    const bookedTimes = bookings.map(b => b.time);
+    const bookedTimes = bookings.map(b => normalizeTime(b.time)); 
 
     return res.json({ bookedTimes });
   } catch (err) {
@@ -123,15 +130,16 @@ router.get('/bookings/times',authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/bookings/user
 router.get("/bookings/user", authMiddleware, async (req, res) => {
-
   if (!req.user || !req.user.id) {
     return res.status(400).json({ message: "Invalid user data in token" });
   }
 
   try {
     const bookings = await Booking.find({ userId: req.user.id })
-      .populate("doctorId", "name specialty");
+      .populate("doctorId", "name specialty")
+      .populate("userId", "name email");;
     res.json(bookings);
   } catch (err) {
     console.error("Error fetching user bookings:", err);
@@ -140,7 +148,7 @@ router.get("/bookings/user", authMiddleware, async (req, res) => {
 });
 
 // GET /api/bookings/:id
-router.get('/bookings/:id', authMiddleware,async (req, res) => {
+router.get('/bookings/:id', authMiddleware, async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate('doctorId', 'name specialty')
@@ -158,8 +166,22 @@ router.get('/bookings/:id', authMiddleware,async (req, res) => {
 });
 
 
+//delete bookings 
 
+router.delete("/bookings/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedTherapist = await Booking.findByIdAndDelete(id);
 
+    if (!deletedTherapist) {
+      return res.status(404).json({ message: "Therapist not found" });
+    }
+
+    res.json({ message: "Therapist deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting therapist", error });
+  }
+});
 
 
 module.exports = router;

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import Home from "./homePages/Home";
 import Login from "./userPages/Login";
 import Register from "./userPages/Register";
@@ -31,7 +31,7 @@ import AppointmentsList from "./Appointments/AppointmentList";
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
     <ScrollToTop/>
      <ToastContainer position="top-center" autoClose={3000} />
       <Routes>
@@ -147,7 +147,7 @@ function App() {
         />
 
        </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

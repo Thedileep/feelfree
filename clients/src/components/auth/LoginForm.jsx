@@ -32,6 +32,8 @@ const LoginForm = () => {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.setItem('token', res.data.token);
       localStorage.setItem("loginTime", Date.now());
+      localStorage.setItem("username", res.data.user.name);
+
       
       toast.success('Login successful', { autoClose: 1500 });
       navigate('/dashboard');

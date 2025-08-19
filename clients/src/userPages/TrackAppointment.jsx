@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import AppointmentInfo from "../Appointments/Appointmentinfo";
-import ChatBox from "../Appointments/ChatBox";
+import ChatBox from "../Chatbox/ChatBox";
 import VideoCall from "../Appointments/VideoCall";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer";

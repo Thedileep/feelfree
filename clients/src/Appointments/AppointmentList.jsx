@@ -1,32 +1,58 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Clock, User } from "lucide-react"; 
+import { CalendarDays, Clock, User, Trash2 } from "lucide-react"; 
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AppointmentsList() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const fetchAppointments = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/bookings/user`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // ✅ latest first (sort by date/time or createdAt if available)
+      const sorted = [...res.data].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setAppointments(sorted || []);
+    } catch (err) {
+      console.error("Error fetching appointments:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/bookings/user`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setAppointments(res.data || []);
-      } catch (err) {
-        console.error("Error fetching appointments:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAppointments();
   }, []);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this appointment?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/bookings/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // ✅ remove from state
+      setAppointments((prev) => prev.filter((apt) => apt._id !== id));
+      toast.success("Appointment deleted", { autoClose: 1500 });
+    } catch (err) {
+      console.error("Error deleting appointment:", err);
+      toast.error("Failed to delete appointment");
+    }
+  };
 
   if (loading) {
     return (
@@ -56,16 +82,26 @@ export default function AppointmentsList() {
             {appointments.map((apt) => (
               <div
                 key={apt._id}
-                className="p-5 border rounded-xl shadow-md hover:shadow-xl bg-white transition cursor-pointer flex flex-col justify-between"
-                onClick={() => {
-                  if (apt.status === "confirmed") {
-                    navigate(`/track-appointment/${apt._id}`);
-                  } else if (apt.status === "pending") {
-                    navigate(`/payment/${apt._id}`);
-                  }
-                }}
+                className="p-5 border rounded-xl shadow-md hover:shadow-xl bg-white transition flex flex-col justify-between relative"
               >
-                <div>
+                {/* ✅ Delete button top-right */}
+                <button
+                  onClick={() => handleDelete(apt._id)}
+                  className="absolute top-3 right-3 text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+
+                <div
+                  className="cursor-pointer"
+                  onClick={() => {
+                    if (apt.status === "confirmed") {
+                      navigate(`/track-appointment/${apt._id}`);
+                    } else if (apt.status === "pending") {
+                      navigate(`/payment/${apt._id}`);
+                    }
+                  }}
+                >
                   <h4 className="font-semibold text-lg flex items-center gap-2 text-gray-800">
                     <User className="w-5 h-5 text-blue-600" />
                     {apt.doctorId?.name || "Unknown Doctor"}
