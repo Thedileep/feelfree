@@ -12,13 +12,13 @@ const initSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    console.log("⚡ Socket connected:", socket.id);
+    console.log("⚡ Socket connected");
 
     // Join a booking room
     const { bookingId } = socket.handshake.query;
     if (bookingId) {
       socket.join(bookingId);
-      console.log(`Socket ${socket.id} joined room ${bookingId}`);
+      
     }
 
     // Listen for typing events
@@ -28,7 +28,7 @@ const initSocket = (server) => {
 
     // Listen for disconnect
     socket.on("disconnect", () => {
-      console.log("⚡ Socket disconnected:", socket.id);
+      console.log("⚡ Socket disconnected:");
     });
   });
 

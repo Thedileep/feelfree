@@ -1,6 +1,7 @@
 import axios from "axios";
 const API = import.meta.env.VITE_API_URL;
-const userId = localStorage.getItem("userId");
+const storedUser = JSON.parse(localStorage.getItem("user"));
+  const userId = storedUser?._id; 
 
 export const sendMediaHelper = async (file, filename, bookingId, setMessages, scrollToBottom, setUploading) => {
   if (!file) return;

@@ -7,7 +7,8 @@ const messageSchema = new mongoose.Schema({
   image: String,
   audio: String,
   video: String,
-  deletedFor: [String], 
+  deletedFor: [String],          
+  deletedForEveryone: { type: Boolean, default: false }, 
 }, { timestamps: true });
 
 module.exports = mongoose.model('Message', messageSchema);

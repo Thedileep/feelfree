@@ -45,6 +45,7 @@ router.post(
         bookingId: req.params.bookingId,
         text,
         sender: req.user.id,
+        deletedFor: [], // initialize empty
       });
       await message.save();
 
@@ -67,7 +68,7 @@ router.post(
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
     try {
-      const messageData = { bookingId: req.params.bookingId, sender: req.user.id };
+      const messageData = { bookingId: req.params.bookingId, sender: req.user.id, deletedFor: [] };
 
       if (req.file.mimetype.startsWith('image/')) messageData.image = req.file.path;
       else if (req.file.mimetype.startsWith('audio/')) messageData.audio = req.file.path;
@@ -109,8 +110,11 @@ router.delete(
         await message.remove();
         req.app.get('io')?.to(message.bookingId).emit('deleteMessage', message._id);
       } else {
-        message.deletedFor.push(req.user.id);
-        await message.save();
+        // Delete for this user only
+        if (!message.deletedFor.includes(req.user.id)) {
+          message.deletedFor.push(req.user.id);
+          await message.save();
+        }
         req.app.get('io')?.to(message.bookingId).emit('deleteMessageForUser', {
           messageId: message._id,
           userId: req.user.id,
