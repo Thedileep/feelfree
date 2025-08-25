@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import AppointmentInfo from "../Appointments/Appointmentinfo";
 import ChatBox from "../Chatbox/ChatBox";
-import VideoCall from "../Appointments/VideoCall";
+import VideoCall from "../VideoCall/VideoCall";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer";
 
@@ -11,6 +11,7 @@ export default function TrackAppointment() {
   const { id } = useParams();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("chat"); 
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -33,7 +34,9 @@ export default function TrackAppointment() {
   if (loading)
     return (
       <div className="min-h-screen flex justify-center items-center bg-gray-50">
-        <p className="text-gray-500 text-lg animate-pulse">Loading appointment...</p>
+        <p className="text-gray-500 text-lg animate-pulse">
+          Loading appointment...
+        </p>
       </div>
     );
 
@@ -47,20 +50,46 @@ export default function TrackAppointment() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 max-w-6xl mx-auto w-full p-6 space-y-6">
+        {/* Appointment Info */}
         <div className="bg-white p-6 rounded-xl shadow-lg">
           <AppointmentInfo booking={booking} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <ChatBox bookingId={id} />
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-md">
-            <VideoCall booking={booking} />
-          </div>
+        {/* Tab Switcher */}
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={() => setActiveTab("chat")}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              activeTab === "chat"
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-white border text-gray-700"
+            }`}
+          >
+            Chat
+          </button>
+          <button
+            onClick={() => setActiveTab("video")}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              activeTab === "video"
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-white border text-gray-700"
+            }`}
+          >
+            Video Call
+          </button>
         </div>
+
+        {/* Content Section */}
+       <div className="bg-white rounded-xl shadow-lg p-4 flex-1">
+        {activeTab === "chat" ? (
+          <ChatBox bookingId={id} />
+        ) : (
+          <VideoCall bookingId={id} role="user" />
+        )}
+      </div>
+
       </main>
 
       <Footer />

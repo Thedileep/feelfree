@@ -20,17 +20,22 @@ export default function ChatBox({ bookingId }) {
     const token = localStorage.getItem("token");
 
     const fetchMessages = async () => {
-      try {
-        const res = await fetch(`${API}/api/messages/${bookingId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setMessages(data || []);
-        scrollToBottom();
-      } catch (err) {
-        console.error("Error fetching messages:", err);
-      }
-    };
+  try {
+    const res = await fetch(`${API}/api/messages/${bookingId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    setMessages((prev) => {
+      const existingMessages = prev.map((msg) => msg._id);
+      const newMessages = data.filter((msg) => !existingMessages.includes(msg._id));
+      return [...prev, ...newMessages];
+    });
+    scrollToBottom();
+  } catch (err) {
+    console.error("Error fetching messages:", err);
+  }
+};
+
     fetchMessages();
 
     const newSocket = io(API, {
@@ -43,13 +48,14 @@ export default function ChatBox({ bookingId }) {
 
     // Listen for incoming messages
     newSocket.on("message", (msg) => {
-  setMessages((prev) => {
-    
-    if (prev.some((m) => m._id === msg._id)) return prev;
-    return [...prev, msg];
+    setMessages((prev) => {
+      const ids = prev.map(m => m._id.toString());
+      if (ids.includes(msg._id.toString())) return prev;
+      return [...prev, msg];
+    });
+    scrollToBottom();
   });
-  scrollToBottom();
-});
+
 
     // Delete message for everyone
     newSocket.on("deleteMessage", (messageId) => {
@@ -74,7 +80,7 @@ export default function ChatBox({ bookingId }) {
   }, [bookingId, userId]);
 
   return (
-    <div className="flex flex-col h-[500px] w-full max-w-xl border rounded-xl shadow-lg bg-white relative">
+    <div className="flex flex-col h-[450px] w-full max-w-xl border rounded-xl shadow-lg bg-white relative">
       <h2 className="text-center text-xl font-bold text-blue-700 py-2 border-b">
         Live Chat
       </h2>

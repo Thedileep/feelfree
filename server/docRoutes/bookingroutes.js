@@ -1,8 +1,9 @@
-const express = require("express");
+const express = require('express')
 const router = express.Router();
 const Booking = require("../models/booking");
 const Therapist = require("../models/registerDocModel");
 const authenticate = require("../middleware/authDocMiddleware");
+const crypto =require("crypto");
 
 // ✅ Get all appointments of a doctor
 router.get("/doctor/:doctorId", authenticate, async (req, res) => {
@@ -75,5 +76,35 @@ router.delete("/bookings/:id", authenticate, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
+// Doctor generates meeting link
+router.post("/generate-meeting/:appointmentId", async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+
+    // Generate unique meeting id
+    const meetingId = crypto.randomBytes(6).toString("hex"); 
+    const expiresAt = Date.now() + 60 * 60 * 1000; 
+
+    const appointment = await Booking.findByIdAndUpdate(
+      appointmentId,
+      {
+        meetingId,
+        meetingLink: `https://meet.jit.si/${meetingId}`,
+        meetingExpiresAt: expiresAt,
+      },
+      { new: true }
+    );
+
+    res.json({ success: true, appointment });
+  } catch (err) {
+    console.error("Meeting generate error:", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+});
+
+
+
 
 module.exports = router;

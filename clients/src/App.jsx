@@ -28,6 +28,7 @@ import ContactUs from "./homePages/Contact";
 import ScrollToTop from "./components/ScrollToTop";
 import TrackAppointment from "./userPages/TrackAppointment";
 import AppointmentsList from "./Appointments/AppointmentList";
+import DoctorVideoCall from "./VideoCall/DoctorVideoCall";
 
 function App() {
   return (
@@ -145,6 +146,14 @@ function App() {
             </ProtectedDocRoute>
           }
         />
+
+        <Route
+         path="/doctor/call/:id" 
+        element={
+        <ProtectedDocRoute>
+        <DoctorVideoCall />
+        </ProtectedDocRoute>
+        } />
 
        </Routes>
     </HashRouter>

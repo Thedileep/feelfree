@@ -48,6 +48,9 @@ app.use('/api',require('./adminRoutes/adminRoutes'))
 app.use('/api',require('./adminRoutes/AuditLogRoutes'))
 
 
+//shared Api
+app.use("/api/agora",require("./sharedRoutes/agora"))
+
 //socket.io 
 app.set("io", io);
 

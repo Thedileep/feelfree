@@ -5,30 +5,55 @@ let io;
 const initSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: ["http://localhost:5173","https://feelfree-3ktk.onrender.com/"], 
+      origin: [
+        "http://localhost:5173",
+        "https://feelfree-3ktk.onrender.com/",
+      ],
       methods: ["GET", "POST"],
       credentials: true,
     },
+    path: "/socket.io",
   });
 
   io.on("connection", (socket) => {
-    console.log("⚡ Socket connected");
+  const { bookingId, role } = socket.handshake.query;
 
-    // Join a booking room
-    const { bookingId } = socket.handshake.query;
-    if (bookingId) {
-      socket.join(bookingId);
-      
+  console.log(`⚡ Socket connected: ${socket.id}, Role: ${role}, Booking: ${bookingId}`);
+
+  if (bookingId) {
+    socket.join(bookingId);
+    console.log(`📌 ${role} joined booking room: ${bookingId}`);
+
+    const room = io.sockets.adapter.rooms.get(bookingId);
+    if (room && room.size === 2) {
+      io.to(bookingId).emit("ready");
     }
+  }
 
-    // Listen for typing events
+    // 📌 Typing (chat feature)
     socket.on("typing", ({ bookingId, sender }) => {
       socket.to(bookingId).emit("typing", { sender });
     });
 
-    // Listen for disconnect
+    // 📌 WebRTC Signaling
+    socket.on("offer", ({ bookingId, offer }) => {
+      console.log(`📡 Offer from ${socket.id} in ${bookingId}`);
+      socket.to(bookingId).emit("offer", offer);
+    });
+
+    socket.on("answer", ({ bookingId, answer }) => {
+      console.log(`📡 Answer from ${socket.id} in ${bookingId}`);
+      socket.to(bookingId).emit("answer", answer);
+    });
+
+    socket.on("ice-candidate", ({ bookingId, candidate }) => {
+      console.log(`❄️ ICE Candidate from ${socket.id} in ${bookingId}`);
+      socket.to(bookingId).emit("ice-candidate", candidate);
+    });
+
+    // 📌 Disconnect
     socket.on("disconnect", () => {
-      console.log("⚡ Socket disconnected:");
+      console.log("⚡ Socket disconnected:", socket.id);
     });
   });
 
