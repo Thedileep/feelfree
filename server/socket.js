@@ -12,7 +12,7 @@ const initSocket = (server) => {
       methods: ["GET", "POST"],
       credentials: true,
     },
-    path: "/socket.io",
+    
   });
 
   io.on("connection", (socket) => {

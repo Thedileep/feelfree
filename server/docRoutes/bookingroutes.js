@@ -4,6 +4,7 @@ const Booking = require("../models/booking");
 const Therapist = require("../models/registerDocModel");
 const authenticate = require("../middleware/authDocMiddleware");
 const crypto =require("crypto");
+const Prescription=require('../models/prescription')
 
 // ✅ Get all appointments of a doctor
 router.get("/doctor/:doctorId", authenticate, async (req, res) => {
@@ -27,41 +28,55 @@ router.get("/doctor/:doctorId", authenticate, async (req, res) => {
   }
 });
 
-// ✅ Approve appointment
-router.put("/bookings/:id/approve", authenticate, async (req, res) => {
+// // ✅ Approve appointment
+// router.put("/bookings/:id/approve", authenticate, async (req, res) => {
+//   try {
+//     const booking = await Booking.findByIdAndUpdate(
+//       req.params.id,
+//       { status: "approved" },
+//       { new: true }
+//     );
+//     if (!booking) {
+//       return res.status(404).json({ message: "Appointment not found" });
+//     }
+//     res.json(booking);
+//   } catch (err) {
+//     console.error("Error approving appointment:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+router.post("/medicine/:bookingId", authenticate, async (req, res) => {
   try {
-    const booking = await Booking.findByIdAndUpdate(
-      req.params.id,
-      { status: "approved" },
-      { new: true }
-    );
-    if (!booking) {
-      return res.status(404).json({ message: "Appointment not found" });
+    const { medicines, notes, userId } = req.body;
+    const bookingId = req.params.bookingId;
+
+    // Agar prescription already exist karta hai, update kar do
+    let prescription = await Prescription.findOne({ bookingId });
+
+    if (prescription) {
+      prescription.medicines.push(...medicines);
+      if (notes) prescription.notes = notes;
+      await prescription.save();
+    } else {
+      // First time create hoga
+      prescription = new Prescription({
+        bookingId,
+        doctorId: req.user.id,
+        userId,
+        medicines,
+        notes,
+      });
+      await prescription.save();
     }
-    res.json(booking);
+
+    res.status(201).json(prescription);
   } catch (err) {
-    console.error("Error approving appointment:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ Reject / Cancel appointment
-router.put("/bookings/:id/cancel", authenticate, async (req, res) => {
-  try {
-    const booking = await Booking.findByIdAndUpdate(
-      req.params.id,
-      { status: "cancelled" },
-      { new: true }
-    );
-    if (!booking) {
-      return res.status(404).json({ message: "Appointment not found" });
-    }
-    res.json(booking);
-  } catch (err) {
-    console.error("Error cancelling appointment:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+
 
 // ✅ Delete appointment completely
 router.delete("/bookings/:id", authenticate, async (req, res) => {
@@ -77,32 +92,6 @@ router.delete("/bookings/:id", authenticate, async (req, res) => {
   }
 });
 
-
-// Doctor generates meeting link
-router.post("/generate-meeting/:appointmentId", async (req, res) => {
-  try {
-    const { appointmentId } = req.params;
-
-    // Generate unique meeting id
-    const meetingId = crypto.randomBytes(6).toString("hex"); 
-    const expiresAt = Date.now() + 60 * 60 * 1000; 
-
-    const appointment = await Booking.findByIdAndUpdate(
-      appointmentId,
-      {
-        meetingId,
-        meetingLink: `https://meet.jit.si/${meetingId}`,
-        meetingExpiresAt: expiresAt,
-      },
-      { new: true }
-    );
-
-    res.json({ success: true, appointment });
-  } catch (err) {
-    console.error("Meeting generate error:", err);
-    res.status(500).json({ success: false, error: "Server error" });
-  }
-});
 
 
 

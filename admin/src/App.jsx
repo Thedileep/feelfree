@@ -8,6 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UserAuditLogs from "./adminpages/UserAuditLog";
 import DocAuditLog from "./adminpages/DocAuditLog"
+import MedicinePage from "./adminpages/Medicine";
 
 function App() {
   return (
@@ -39,6 +40,15 @@ function App() {
           element={
             <ProtectedAdmin>
               <DocAuditLog/>
+            </ProtectedAdmin>
+          }
+        />
+
+        <Route
+          path="/admin/get-medicine"
+          element={
+            <ProtectedAdmin>
+              <MedicinePage/>
             </ProtectedAdmin>
           }
         />

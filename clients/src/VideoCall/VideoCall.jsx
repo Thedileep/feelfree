@@ -1,252 +1,226 @@
 import React, { useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
+import { db } from "./firebase";
+import { collection, doc, setDoc, addDoc, onSnapshot } from "firebase/firestore";
+import { FiCamera, FiCameraOff, FiMic, FiMicOff, FiPhoneOff } from "react-icons/fi";
+import { motion } from "framer-motion";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL; // must be https/wss in prod
-
-// ✅ Use STUN + TURN in production
+// Load ICE servers from environment variables
 const servers = {
   iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    // ---- TURN (required for many prod networks) ----
-    // Create your own coturn or use a provider (Twilio, Cloudflare, etc.)
-    // {
-    //   urls: ["turn:YOUR_TURN_HOST:3478"],
-    //   username: "TURN_USER",
-    //   credential: "TURN_PASS",
-    // },
-  ],
-  // iceTransportPolicy: "all", // default; can set "relay" to force TURN
+    {
+      urls: import.meta.env.VITE_STUN_URL
+    },
+    {
+      urls: [import.meta.env.VITE_TURN_URL],
+      username: import.meta.env.VITE_TURN_USERNAME,
+      credential: import.meta.env.VITE_TURN_CREDENTIAL
+    }
+  ]
 };
+
 
 export default function VideoCall({ bookingId, role }) {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const pc = useRef(null);
-  const socket = useRef(null);
   const localStream = useRef(null);
-  const pendingRemoteCandidates = useRef([]);
+  const pendingCandidates = useRef([]);
 
+  const [remoteStream, setRemoteStream] = useState(null);
   const [inCall, setInCall] = useState(false);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
-
-  // --- helpers ---
-  const safePlay = (video) => {
-    try {
-      const p = video?.play?.();
-      if (p && typeof p.then === "function") p.catch(() => {});
-    } catch {}
-  };
-
-  const attachLocal = () => {
-    if (!localVideoRef.current || !localStream.current) return;
-    localVideoRef.current.srcObject = localStream.current;
-    localVideoRef.current.muted = true; // self-preview muted
-    localVideoRef.current.playsInline = true;
-    safePlay(localVideoRef.current);
-  };
-
-  const attachRemote = (stream) => {
-    if (!remoteVideoRef.current) return;
-    remoteVideoRef.current.srcObject = stream;
-    remoteVideoRef.current.playsInline = true;
-    safePlay(remoteVideoRef.current);
-  };
-
-  const registerSocketHandlers = () => {
-    // Use once() to avoid duplicate handlers across reconnects
-    socket.current.once("ready", async () => {
-      if (role === "doctor") {
-        // offerer only
-        const offer = await pc.current.createOffer();
-        await pc.current.setLocalDescription(offer);
-        socket.current.emit("offer", { bookingId, offer });
-      }
-    });
-
-    socket.current.on("offer", async (offer) => {
-      // answerer path
-      if (!pc.current.currentRemoteDescription) {
-        await pc.current.setRemoteDescription(new RTCSessionDescription(offer));
-      }
-      const answer = await pc.current.createAnswer();
-      await pc.current.setLocalDescription(answer);
-      socket.current.emit("answer", { bookingId, answer });
-      // flush any buffered candidates
-      while (pendingRemoteCandidates.current.length) {
-        const c = pendingRemoteCandidates.current.shift();
-        try { await pc.current.addIceCandidate(c); } catch {}
-      }
-    });
-
-    socket.current.on("answer", async (answer) => {
-      if (!pc.current.currentRemoteDescription) {
-        await pc.current.setRemoteDescription(new RTCSessionDescription(answer));
-      }
-      // flush any buffered candidates
-      while (pendingRemoteCandidates.current.length) {
-        const c = pendingRemoteCandidates.current.shift();
-        try { await pc.current.addIceCandidate(c); } catch {}
-      }
-    });
-
-    socket.current.on("ice-candidate", async (candidate) => {
-      const rtc = new RTCIceCandidate(candidate);
-      if (pc.current?.remoteDescription?.type) {
-        try { await pc.current.addIceCandidate(rtc); } catch (e) { console.error("ICE add error", e); }
-      } else {
-        // buffer until remoteDescription is set
-        pendingRemoteCandidates.current.push(rtc);
-      }
-    });
-
-    // (Optional) if socket reconnects, the server should re-emit "ready" when room has 2 peers.
-    socket.current.on("connect_error", (e) => console.warn("Socket connect error:", e?.message));
-  };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const createPeerConnection = () => {
     pc.current = new RTCPeerConnection(servers);
 
-    pc.current.onicecandidate = (e) => {
-      if (e.candidate) {
-        socket.current.emit("ice-candidate", { bookingId, candidate: e.candidate });
-      }
+    pc.current.onicecandidate = async (event) => {
+      if (!event.candidate) return;
+      const candidatesRef = collection(
+        db,
+        "bookings",
+        bookingId,
+        role === "doctor" ? "doctorCandidates" : "userCandidates"
+      );
+      await addDoc(candidatesRef, { candidate: event.candidate.toJSON() });
     };
 
-    pc.current.ontrack = (evt) => {
-      if (evt.streams && evt.streams[0]) attachRemote(evt.streams[0]);
-    };
-
-    pc.current.onconnectionstatechange = () => {
-      const s = pc.current.connectionState;
-      console.log("pc connectionState:", s);
-      if (s === "failed" || s === "disconnected" || s === "closed") {
-        // keep UI responsive; you can auto-retry if you want
-      }
+    pc.current.ontrack = (event) => {
+      if (event.streams && event.streams[0]) setRemoteStream(event.streams[0]);
     };
   };
 
   const addLocalTracks = () => {
-    localStream.current.getTracks().forEach((t) => pc.current.addTrack(t, localStream.current));
+    if (localStream.current) {
+      localStream.current.getTracks().forEach((track) => pc.current.addTrack(track, localStream.current));
+    }
   };
 
-  // --- join ---
-  const joinCall = async () => {
-    if (inCall) return;
+  const processPendingCandidates = async () => {
+    if (!pc.current?.remoteDescription) return; 
+    while (pendingCandidates.current.length > 0) {
+      const candidate = pendingCandidates.current.shift();
+      try {
+        await pc.current.addIceCandidate(candidate);
+      } catch (err) {
+        // Handle "Unknown ufrag" errors gracefully - these are usually harmless
+        if (err.message && err.message.includes('ufrag')) {
+          console.warn("ICE candidate with mismatched ufrag - likely stale candidate:", err);
+        } else {
+          console.error("Failed to add ICE candidate:", err);
+        }
+      }
+    }
+  };
 
-    // 1) connect socket over WSS with explicit websocket transport
-    socket.current = io(SOCKET_URL, {
-      path: "/socket.io",         // default path; keep same on server
-      transports: ["websocket"],  // no long-polling in prod
-      withCredentials: true,
-      query: { bookingId, role },
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
+  const listenFirestore = () => {
+    const callDoc = doc(db, "bookings", bookingId);
+    const offerCandidatesCol = collection(db, "bookings", bookingId, "userCandidates");
+    const answerCandidatesCol = collection(db, "bookings", bookingId, "doctorCandidates");
+    const candidatesCol = role === "doctor" ? offerCandidatesCol : answerCandidatesCol;
+
+    onSnapshot(callDoc, async (snap) => {
+      const data = snap.data();
+      if (!data) return;
+
+      try {
+        if (role === "doctor" && data.offer && !pc.current.currentRemoteDescription) {
+          await pc.current.setRemoteDescription(new RTCSessionDescription(data.offer));
+          const answer = await pc.current.createAnswer();
+          await pc.current.setLocalDescription(answer);
+          await setDoc(callDoc, { answer: pc.current.localDescription.toJSON() }, { merge: true });
+          await processPendingCandidates();
+        }
+
+        if (role === "user" && data.answer && !pc.current.currentRemoteDescription) {
+          await pc.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+          await processPendingCandidates();
+        }
+      } catch (err) {
+        console.error("Error setting remote description:", err);
+      }
     });
 
-    // 2) create pc
-    createPeerConnection();
-
-    // 3) get A/V before signaling
-    try {
-      localStream.current = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    onSnapshot(candidatesCol, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const candidate = new RTCIceCandidate(change.doc.data().candidate);
+          if (pc.current?.remoteDescription) {
+            pc.current.addIceCandidate(candidate).catch(console.error);
+          } else {
+            pendingCandidates.current.push(candidate);
+          }
+        }
       });
-    } catch (err) {
-      console.error("getUserMedia error:", err);
-      alert("Camera/Mic permission is required to start the call.");
-      socket.current.disconnect();
-      return;
-    }
-
-    // 4) attach & add tracks
-    attachLocal();
-    addLocalTracks();
-
-    // 5) signal handlers
-    registerSocketHandlers();
-
-    setInCall(true);
+    });
   };
 
-  // --- toggles (no re-add) ---
+  const joinCall = async () => {
+    if (inCall || loading) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      createPeerConnection();
+      localStream.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      if (localVideoRef.current) localVideoRef.current.srcObject = localStream.current;
+      addLocalTracks();
+      listenFirestore();
+
+      const callDoc = doc(db, "bookings", bookingId);
+      if (role === "user") {
+        const offer = await pc.current.createOffer();
+        await pc.current.setLocalDescription(offer);
+        await setDoc(callDoc, { offer: pc.current.localDescription.toJSON() });
+      }
+
+      setCamOn(true);
+      setMicOn(true);
+      setInCall(true);
+    } catch (err) {
+      console.error(err);
+      setError("Camera/Mic permission required or device not available");
+      if (localStream.current) endCall();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleCamera = () => {
-    const track = localStream.current?.getVideoTracks?.()[0];
-    if (!track) return;
-    track.enabled = !track.enabled;
-    setCamOn(track.enabled);
+    const track = localStream.current?.getVideoTracks()[0];
+    if (track) {
+      track.enabled = !track.enabled;
+      setCamOn(track.enabled);
+    }
   };
 
   const toggleMic = () => {
-    const track = localStream.current?.getAudioTracks?.()[0];
-    if (!track) return;
-    track.enabled = !track.enabled;
-    setMicOn(track.enabled);
+    const track = localStream.current?.getAudioTracks()[0];
+    if (track) {
+      track.enabled = !track.enabled;
+      setMicOn(track.enabled);
+    }
   };
 
-  // --- leave/cleanup ---
   const endCall = () => {
-    try { socket.current?.disconnect(); } catch {}
-    try {
-      pc.current?.getSenders?.().forEach((s) => s.track && s.track.stop());
-      localStream.current?.getTracks?.().forEach((t) => t.stop());
-      pc.current?.close?.();
-    } catch {}
-    pendingRemoteCandidates.current = [];
-    localStream.current = null;
+    pc.current?.getSenders().forEach((s) => s.track?.stop());
+    pc.current?.close();
     pc.current = null;
-    socket.current = null;
+
+    localStream.current?.getTracks().forEach((t) => t.stop());
+    localStream.current = null;
+
+    pendingCandidates.current = [];
+    setRemoteStream(null);
     setInCall(false);
-    setMicOn(true);
-    setCamOn(true);
+    setCamOn(false);
+    setMicOn(false);
   };
 
   useEffect(() => {
-    return () => endCall(); // cleanup on unmount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
+  }, [remoteStream]);
+
+  useEffect(() => () => inCall && endCall(), [inCall]);
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full h-[80vh]">
-      {!inCall ? (
-        <button
-          onClick={joinCall}
-          className="px-6 py-3 bg-green-600 text-white rounded-xl text-lg shadow-md"
-        >
-          Join Call
-        </button>
-      ) : (
-        <>
-          <div className="flex gap-4 w-full h-[70vh]">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-1/2 rounded-lg border bg-black"
-            />
-            <video
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-              className="w-1/2 rounded-lg border bg-black"
-            />
-          </div>
+    <div className="flex flex-col items-center justify-center gap-4 w-full h-full p-2 bg-gray-100">
+      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">{error}</div>}
 
-          <div className="flex gap-4">
-            <button onClick={toggleCamera} className="px-4 py-2 bg-green-500 text-white rounded-lg">
-              {camOn ? "Turn Off Camera" : "Turn On Camera"}
+      {!inCall ? (
+        <motion.button
+          onClick={joinCall}
+          disabled={loading}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="px-6 py-3 bg-green-600 text-white rounded-xl text-lg shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          {loading ? "Joining..." : "Join Call"}
+        </motion.button>
+      ) : (
+        <motion.div className="flex flex-col md:flex-row gap-4 w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+          <div className="relative flex-1 rounded-lg overflow-hidden border bg-black flex items-center justify-center h-[40vh] md:h-full">
+            <video ref={localVideoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+            {!camOn && <div className="absolute inset-0 flex items-center justify-center bg-black text-white text-2xl font-bold">YOU</div>}
+          </div>
+          <div className="relative flex-1 rounded-lg overflow-hidden border bg-black flex items-center justify-center h-[40vh] md:h-full">
+            <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+            {!remoteStream && <div className="absolute inset-0 flex items-center justify-center bg-black text-white text-2xl font-bold">Waiting...</div>}
+          </div>
+          <div className="flex gap-4 justify-center mt-4 md:mt-0 md:flex-col">
+            <button onClick={toggleCamera} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+              {camOn ? <FiCamera /> : <FiCameraOff />} {camOn ? "Camera On" : "Camera Off"}
             </button>
-            <button onClick={toggleMic} className="px-4 py-2 bg-blue-500 text-white rounded-lg">
-              {micOn ? "Mute Mic" : "Unmute Mic"}
+            <button onClick={toggleMic} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+              {micOn ? <FiMic /> : <FiMicOff />} {micOn ? "Mic On" : "Mic Off"}
             </button>
-            <button onClick={endCall} className="px-4 py-2 bg-red-500 text-white rounded-lg">
-              End Call
+            <button onClick={endCall} className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+              <FiPhoneOff /> End Call
             </button>
           </div>
-        </>
+        </motion.div>
       )}
     </div>
   );

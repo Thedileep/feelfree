@@ -5,6 +5,8 @@ const Therapist = require('../models/registerDocModel');
 const User = require('../models/registerModels'); 
 const mongoose = require('mongoose');
 const authMiddleware = require('../middleware/authMiddleware');
+const { firestoreDB,doc, setDoc } = require('../firebase'); 
+const Prescription=require("../models/prescription")
 
 const normalizeTime = (time) => {
   const [h, m] = time.split(":");
@@ -60,18 +62,21 @@ router.post('/bookings', authMiddleware, async (req, res) => {
   session.startTransaction();
 
   try {
+    // Check doctor exists
     const doctorExists = await Therapist.exists({ _id: doctorId }).session(session);
     if (!doctorExists) {
       await session.abortTransaction();
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
+    // Check user exists
     const userExists = await User.exists({ _id: userId }).session(session);
     if (!userExists) {
       await session.abortTransaction();
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Check for existing booking at same slot
     const existingBooking = await Booking.findOne({
       doctorId,
       date,
@@ -84,6 +89,7 @@ router.post('/bookings', authMiddleware, async (req, res) => {
       return res.status(409).json({ message: 'Slot already booked' });
     }
 
+    // Create booking in MongoDB
     const booking = new Booking({
       doctorId,
       date,
@@ -93,6 +99,23 @@ router.post('/bookings', authMiddleware, async (req, res) => {
     });
 
     await booking.save({ session });
+
+    // --- Firestore integration ---
+    try {
+      
+      const bookingDocRef = doc(firestoreDB, 'bookings', booking._id.toString());
+      await setDoc(bookingDocRef, {
+        offer: null,
+        answer: null,
+        userCandidates: [],
+        doctorCandidates: [],
+      });
+      console.log('Firestore doc created for booking:', booking._id.toString());
+    } catch (fsErr) {
+      console.error('Error creating Firestore doc:', fsErr);
+    }
+    // --- End Firestore integration ---
+
     await session.commitTransaction();
     session.endSession();
 
@@ -104,6 +127,7 @@ router.post('/bookings', authMiddleware, async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 
 // GET /api/bookings/times
@@ -162,6 +186,22 @@ router.get('/bookings/:id', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Error fetching booking:", err);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get("/get-medicine/:bookingId", authMiddleware, async (req, res) => {
+  try {
+    const prescription = await Prescription.findOne({
+      bookingId: req.params.bookingId,
+    }).populate("doctorId", "name specialization");
+
+    if (!prescription) {
+      return res.status(404).json({ message: "No prescription found" });
+    }
+
+    res.json(prescription);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

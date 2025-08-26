@@ -46,10 +46,8 @@ app.use('/api',require('./docRoutes/bookingroutes'))
 app.use('/api',require('./adminRoutes/authRoute'))
 app.use('/api',require('./adminRoutes/adminRoutes'))
 app.use('/api',require('./adminRoutes/AuditLogRoutes'))
+app.use('/api',require('./adminRoutes/adminMedicineRoute'))
 
-
-//shared Api
-app.use("/api/agora",require("./sharedRoutes/agora"))
 
 //socket.io 
 app.set("io", io);
