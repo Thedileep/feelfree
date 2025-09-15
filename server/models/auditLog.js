@@ -6,16 +6,7 @@ const auditLogSchema = new mongoose.Schema({
   ipAddress: String,
   deviceInfo: String,
   timestamp: Date,
-  location: {
-    ip: String,
-    city: String,
-    region: String,
-    country: String,
-    loc: String,
-    org: String,
-    postal: String,
-    timezone: String,
-  },
+  location: String,
 });
 
 

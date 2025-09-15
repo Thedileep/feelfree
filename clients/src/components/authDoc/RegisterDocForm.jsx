@@ -76,7 +76,7 @@ const TherapistRegister = () => {
 
 
       toast.success("Registration successful");
-      setTimeout(() => navigate("/login/therapist"), 1200);
+      setTimeout(() => navigate("/login/therapist"), 1000);
     } catch (err) {
       const msg = err.response?.data?.message || err.message || "Something went wrong";
       toast.error("Error: " + msg);

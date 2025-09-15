@@ -6,6 +6,8 @@ import Footer from "../components/Footer";
 
 export default function DoctorList() {
   const [doctors, setDoctors] = useState([]);
+  const [search, setSearch] = useState("");
+  const [sortOption, setSortOption] = useState("default");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,6 +38,21 @@ export default function DoctorList() {
     navigate("/book-schedule");
   };
 
+  // Search + Sort doctors
+  const filteredDoctors = doctors
+    .filter((doc) =>
+      [doc.name, doc.specialization]
+        .join(" ")
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortOption === "rating") return (b.rating || 0) - (a.rating || 0);
+      if (sortOption === "experience")
+        return (b.experience || 0) - (a.experience || 0);
+      return 0;
+    });
+
   return (
     <>
       <Navbar />
@@ -44,26 +61,49 @@ export default function DoctorList() {
           Choose Your Doctor
         </h2>
 
-        {doctors.length === 0 ? (
+        {/* Search & Sort Controls */}
+        <div className="flex flex-col md:flex-row justify-center gap-4 mb-8">
+          <input
+            type="text"
+            placeholder="Search doctor by name or specialization..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full md:w-1/2 border rounded-lg px-4 py-2 shadow-sm focus:ring focus:ring-blue-300"
+          />
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="border rounded-lg px-4 py-2 shadow-sm focus:ring focus:ring-blue-300"
+          >
+            <option value="default">Sort By</option>
+            <option value="rating">Highest Rating</option>
+            <option value="experience">Highest Experience</option>
+          </select>
+        </div>
+
+        {filteredDoctors.length === 0 ? (
           <p className="text-center text-gray-500 text-lg">
-            No approved doctors available at the moment.
+            No doctors match your search.
           </p>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
-            {doctors.map((doc) => (
+            {filteredDoctors.map((doc) => (
               <div
                 key={doc._id}
                 className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100"
               >
                 {/* Doctor Photo */}
-             <div className="w-48 h-48 mx-auto mt-4 overflow-hidden rounded-full border-4 border-blue-500">
-            <img
-                src={doc.photoPath || "https://via.placeholder.com/150?text=No+Image"}
-                alt={doc.name || "doctor photo"}
-                className="w-full h-full object-cover object-top"
-                loading="lazy"
-            />
-            </div>
+                <div className="w-48 h-48 mx-auto mt-4 overflow-hidden rounded-full border-4 border-blue-500">
+                  <img
+                    src={
+                      doc.photoPath ||
+                      "https://via.placeholder.com/150?text=No+Image"
+                    }
+                    alt={doc.name || "doctor photo"}
+                    className="w-full h-full object-cover object-top"
+                    loading="lazy"
+                  />
+                </div>
 
                 {/* Doctor Info */}
                 <div className="p-6">

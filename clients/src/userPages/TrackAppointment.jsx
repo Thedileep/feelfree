@@ -1,4 +1,4 @@
-// TrackAppointment.jsx
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -25,7 +25,6 @@ export default function TrackAppointment() {
         );
         setBooking(res.data);
 
-        // fetch prescription
         const presRes = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/get-medicine/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }

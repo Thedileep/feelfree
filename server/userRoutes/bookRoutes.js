@@ -49,6 +49,8 @@ router.post('/check-availability', authMiddleware, async (req, res) => {
 
 
 // POST /api/bookings
+const { sendDoctorBookingEmail } = require('../adminRoutes/mailRoutes'); 
+
 router.post('/bookings', authMiddleware, async (req, res) => {
   const { doctorId, date, time, userId } = req.body;
 
@@ -63,15 +65,15 @@ router.post('/bookings', authMiddleware, async (req, res) => {
 
   try {
     // Check doctor exists
-    const doctorExists = await Therapist.exists({ _id: doctorId }).session(session);
-    if (!doctorExists) {
+    const doctor = await Therapist.findById(doctorId).session(session);
+    if (!doctor) {
       await session.abortTransaction();
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
     // Check user exists
-    const userExists = await User.exists({ _id: userId }).session(session);
-    if (!userExists) {
+    const user = await User.findById(userId).session(session);
+    if (!user) {
       await session.abortTransaction();
       return res.status(404).json({ message: 'User not found' });
     }
@@ -102,7 +104,6 @@ router.post('/bookings', authMiddleware, async (req, res) => {
 
     // --- Firestore integration ---
     try {
-      
       const bookingDocRef = doc(firestoreDB, 'bookings', booking._id.toString());
       await setDoc(bookingDocRef, {
         offer: null,
@@ -110,7 +111,6 @@ router.post('/bookings', authMiddleware, async (req, res) => {
         userCandidates: [],
         doctorCandidates: [],
       });
-      console.log('Firestore doc created for booking:', booking._id.toString());
     } catch (fsErr) {
       console.error('Error creating Firestore doc:', fsErr);
     }
@@ -119,14 +119,27 @@ router.post('/bookings', authMiddleware, async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
+    // ✅ Send doctor email here
+    try {
+      await sendDoctorBookingEmail(
+        doctor.email,
+        doctor.name,
+        date,
+        normalizedTime,
+        user.name
+      );
+    } catch (mailErr) {
+      console.error("Error sending booking email:", mailErr.message);
+    }
+
     return res.status(201).json({ success: true, booking });
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
-    console.error('Error creating booking:', err);
     return res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 
 

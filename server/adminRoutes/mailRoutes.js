@@ -8,6 +8,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// ✅ Therapist approval mail
 const sendApprovalEmail = async (to, name) => {
   const mailOptions = {
     from: `"FeelFree Admin" <${process.env.MAIL_USER}>`,
@@ -31,11 +32,37 @@ const sendApprovalEmail = async (to, name) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.response);
+    await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error('Failed to send email:', error.response?.data || error.message);
+    console.error('❌ Failed to send approval email:', error.message);
   }
 };
 
-module.exports = sendApprovalEmail;
+// ✅ Doctor appointment mail
+const sendDoctorBookingEmail = async (doctorEmail, doctorName, date, time, patientName) => {
+  const mailOptions = {
+    from: `"FeelFree App" <${process.env.MAIL_USER}>`,
+    to: doctorEmail,
+    subject: 'New Appointment Scheduled - FeelFree',
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9fafb; color: #333;">
+        <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+          <h2 style="color: #2196F3;">Hello Dr. ${doctorName},</h2>
+          <p>You have a new appointment scheduled on <b>${date}</b> at <b>${time}</b>.</p>
+          <p><b>Patient:</b> ${patientName}</p>
+          <p>Please check your dashboard for more details.</p>
+
+          <p style="margin-top: 30px;">Regards,<br/><strong>FeelFree Team</strong></p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('❌ Failed to send appointment email:', error.message);
+  }
+};
+
+module.exports = { sendApprovalEmail, sendDoctorBookingEmail };

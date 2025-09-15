@@ -7,9 +7,6 @@ const docAuditLog = require("../models/docAuditLog");
 
 const router = express.Router();
 
-/**
- * ✅ Get all normal user audit logs (Admin only) with full tracking data
- */
 router.get("/admin/user-audit-logs", authAdmin, async (req, res) => {
   try {
     const logs = await AuditLog.find({})
@@ -22,7 +19,6 @@ router.get("/admin/user-audit-logs", authAdmin, async (req, res) => {
 
     res.json({ count: logs.length, logs: logs });
   } catch (err) {
-    console.error("❌ Error fetching user audit logs:", err);
     res.status(500).json({
       message: "Failed to fetch user audit logs",
       error: err.message
@@ -30,9 +26,7 @@ router.get("/admin/user-audit-logs", authAdmin, async (req, res) => {
   }
 });
 
-/**
- * ✅ Get all therapist audit logs (Admin only) with full tracking data
- */
+
 router.get("/admin/therapist-audit-logs", authAdmin, async (req, res) => {
   try {
     const logs = await DoctorAuditLog.find({})
@@ -52,7 +46,6 @@ router.get("/admin/therapist-audit-logs", authAdmin, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ Error fetching therapist audit logs:", err);
     res.status(500).json({
       message: "Failed to fetch therapist audit logs",
       error: err.message
@@ -64,7 +57,6 @@ router.delete("/admin/audit-log/:id", authAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Try deleting from both collections
     const userDelete = await AuditLog.findByIdAndDelete(id);
     const therapistDelete = await DoctorAuditLog.findByIdAndDelete(id);
 
@@ -74,7 +66,6 @@ router.delete("/admin/audit-log/:id", authAdmin, async (req, res) => {
 
     res.status(200).json({ message: "Audit log deleted successfully" });
   } catch (err) {
-    console.error("❌ Error deleting audit log:", err);
     res.status(500).json({
       message: "Failed to delete audit log",
       error: err.message

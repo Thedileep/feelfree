@@ -1,4 +1,4 @@
-// 📁 client/src/pages/Dashboard.js
+
 import React from "react";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer";
@@ -13,7 +13,6 @@ const Dashboard = () => {
 
 
   const handleFeatureClick = (feature) => {
-    // You can route to other pages or modal logic
     alert(`You clicked: ${feature}`);
   };
 

@@ -85,6 +85,13 @@ const AdminDashboard = () => {
           Therapist Audit Logs
         </button>
 
+         <button
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow-md"
+          onClick={() => navigate("/admin/get-payments")}
+        >
+          Payment List
+        </button>
+
         {/* New Medicine Button */}
         <button
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 shadow-md"

@@ -5,6 +5,10 @@ const http = require("http");
 const { initSocket } = require("./socket");
 require("dotenv").config();
 
+const passport = require("passport");
+const session = require("express-session");
+require("./userRoutes/passport")(passport);
+
 const app = express();
 const server = http.createServer(app);
 const io = initSocket(server);
@@ -19,7 +23,18 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static('public'))
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "keyboardcat",
+    resave: false,
+    saveUninitialized: false
+  })
+);
 
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use('/api/auth',require('./userRoutes/authRoutes'))
 //connect database
 connectDB()
 
@@ -31,7 +46,7 @@ app.use('/api',require('./userRoutes/journalRoutes'));
 app.use('/api',require('./userRoutes/bookRoutes'))
 app.use("/api/payments", require('./userRoutes/paymentRoute'));
 app.use('/api',require('./userRoutes/chatscheduleRoutes'))
-
+app.use('/api',require("./userRoutes/moodRoutes"))
 
 //app.use('/api',require('./routes/moodRoutes'))
 
@@ -47,7 +62,7 @@ app.use('/api',require('./adminRoutes/authRoute'))
 app.use('/api',require('./adminRoutes/adminRoutes'))
 app.use('/api',require('./adminRoutes/AuditLogRoutes'))
 app.use('/api',require('./adminRoutes/adminMedicineRoute'))
-
+app.use('/api',require('./adminRoutes/paymentList'))
 
 //socket.io 
 app.set("io", io);

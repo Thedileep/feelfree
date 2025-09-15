@@ -11,7 +11,6 @@ const { storage, fileFilter } = require('../docRoutes/cloudStorage');
 const router = express.Router();
 const upload = multer({ storage, fileFilter });
 
-// Helper to get IP, device, and location
 async function getRequestMeta(req) {
   const ip =
     req.headers["x-forwarded-for"]?.split(",").shift() ||
@@ -76,7 +75,12 @@ router.post(
 
       await therapist.save();
 
-      // Create audit log
+      const token = jwt.sign(
+        { id: therapist._id, role: 'therapist' },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+
       const meta = await getRequestMeta(req);
       await DoctorAuditLog.create({
         therapistId: therapist._id,
@@ -87,11 +91,20 @@ router.post(
         location: meta.location
       });
 
-      res.status(201).json({ message: 'Therapist registered successfully' });
+      res.status(201).json({ message: 'Therapist registered successfully',
+        token,
+        doctor: {
+          _id: therapist._id,
+          name: therapist.name,
+          email: therapist.email,
+          phone: therapist.phone
+        }
+
+       });
     } catch (err) {
-      console.error('❌ Registration Error:', err.message);
       res.status(500).json({
         message: 'Registration failed',
+        
         error: err.message,
         stack: err.stack
       });
@@ -109,7 +122,7 @@ router.post('/login-therapist', async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, therapist.password);
     if (!isMatch) {
-      // Log failed login
+      
       const meta = await getRequestMeta(req);
       await DoctorAuditLog.create({
         therapistId: therapist._id,
@@ -135,7 +148,6 @@ router.post('/login-therapist', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    // Log successful login
     const meta = await getRequestMeta(req);
     await DoctorAuditLog.create({
       therapistId: therapist._id,
@@ -148,7 +160,6 @@ router.post('/login-therapist', async (req, res) => {
 
     res.status(200).json({ token, doctor: therapist });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: 'Login failed', error: err.message });
   }
 });

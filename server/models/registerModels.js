@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
   nationality: { type: String },
   gender: { type: String },
   occupation: { type: String },
+  isVerified: { type: Boolean, default: false },
+  verificationToken: String
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

@@ -1,7 +1,9 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const axios = require("axios");
+const crypto = require("crypto");
+const passport = require("passport");
+const nodemailer = require("nodemailer");
 
 const User = require("../models/registerModels");
 const AuditLog = require("../models/auditLog");
@@ -14,24 +16,21 @@ async function getRequestMeta(req) {
     req.headers["x-forwarded-for"]?.split(",").shift() ||
     req.connection.remoteAddress ||
     req.socket.remoteAddress ||
-    req.connection.socket?.remoteAddress ||
     "";
 
   const deviceInfo = req.headers["user-agent"] || "";
   const timestamp = new Date();
-
-  let location = null;
-  try {
-    const response = await axios.get(`https://ipinfo.io/${ip}?token=${process.env.IPINFO_TOKEN}`);
-    location = response.data;
-  } catch {
-    location = null;
-  }
-
+  const location = null;
   return { ip, deviceInfo, timestamp, location };
 }
 
-// User Registration
+// Nodemailer transporter (use Gmail or any SMTP service)
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
+});
+
+// ==================== REGISTER ====================
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, dob, nationality, gender, occupation } = req.body;
@@ -46,6 +45,7 @@ router.post("/register", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const token = crypto.randomBytes(32).toString("hex");
 
     const newUser = new User({
       name,
@@ -55,9 +55,12 @@ router.post("/register", async (req, res) => {
       nationality,
       gender,
       occupation,
+      verificationToken: token
     });
 
     await newUser.save();
+
+    
 
     // Audit log
     const meta = await getRequestMeta(req);
@@ -67,53 +70,90 @@ router.post("/register", async (req, res) => {
       ipAddress: meta.ip,
       deviceInfo: meta.deviceInfo,
       timestamp: meta.timestamp,
-      location: meta.location,
+      location: meta.location
     });
 
-    res.status(201).json({ message: "User registered successfully" });
+     const verifyURL = `${process.env.BASE_URL}/api/auth/verify/${token}`;
+    await transporter.sendMail({
+      to: email,
+      subject: "Verify your email",
+      html: `<p>Click <a href="${verifyURL}">here</a> to verify your account.</p>`
+    });
+
+    res.status(201).json({ message: "User registered. Please verify your email." });
+    
   } catch (err) {
-    console.error("❌ Registration Error:", err.message);
+    console.log("Registration error:", err);
     res.status(500).json({ message: "Registration failed", error: err.message });
   }
 });
 
-// User Login
-router.post("/login", async (req, res) => {
+// ==================== EMAIL VERIFY ====================
+router.get("/verify/:token", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const user = await User.findOne({ verificationToken: req.params.token });
+    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
 
-    const user = await User.findOne({ email });
+    user.isVerified = true;
+    user.verificationToken = null;
+    await user.save();
+
+    // Audit log
+    const meta = await getRequestMeta(req);
+    await AuditLog.create({
+      userId: user._id,
+      action: "REGISTER",
+      ipAddress: meta.ip,
+      deviceInfo: meta.deviceInfo,
+      timestamp: meta.timestamp,
+      location: meta.location
+    });
+
+    return res.send(`
+      <html>
+        <head>
+          <title>Email Verified</title>
+          <style>
+            body { font-family: Arial, sans-serif; background:#f0f8ff; text-align:center; padding:50px; }
+            .card { max-width:400px; margin:auto; background:#fff; padding:30px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+            h2 { color:#28a745; }
+            a { display:inline-block; margin-top:20px; padding:10px 20px; background:#28a745; color:#fff; border-radius:8px; text-decoration:none; }
+            a:hover { background:#218838; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h2>✅ Email Verified Successfully</h2>
+            <p>You can now login to your account.</p>
+            <a href="/login">Go to Login</a>
+          </div>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    res.status(500).json({ message: "Verification failed", error: err.message });
+  }
+});
+
+// ==================== LOGIN ====================
+router.post("/login", (req, res, next) => {
+  passport.authenticate("local", async (err, user, info) => {
+    if (err) return next(err);
     if (!user) {
       const meta = await getRequestMeta(req);
       await AuditLog.create({
-        action: "LOGIN_FAILED_NO_USER",
+        action: "LOGIN_FAILED",
         ipAddress: meta.ip,
         deviceInfo: meta.deviceInfo,
         timestamp: meta.timestamp,
-        location: meta.location,
+        location: meta.location
       });
-      return res.status(404).json({ message: "User not found" });
+      return res.status(400).json({ message: info.message });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      const meta = await getRequestMeta(req);
-      await AuditLog.create({
-        userId: user._id,
-        action: "LOGIN_FAILED_WRONG_PASSWORD",
-        ipAddress: meta.ip,
-        deviceInfo: meta.deviceInfo,
-        timestamp: meta.timestamp,
-        location: meta.location,
-      });
-      return res.status(401).json({ message: "Invalid password" });
-    }
-
-    const token = jwt.sign(
-      { id: user._id, role: "user" },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const token = jwt.sign({ id: user._id, role: "user" }, process.env.JWT_SECRET, {
+      expiresIn: "1h"
+    });
 
     const meta = await getRequestMeta(req);
     await AuditLog.create({
@@ -122,18 +162,15 @@ router.post("/login", async (req, res) => {
       ipAddress: meta.ip,
       deviceInfo: meta.deviceInfo,
       timestamp: meta.timestamp,
-      location: meta.location,
+      location: meta.location
     });
 
-    res.status(200).json({
+    res.json({
       message: "Login successful",
       token,
-      user: { _id: user._id, name: user.name, email: user.email },
+      user: { _id: user._id, name: user.name, email: user.email }
     });
-  } catch (err) {
-    console.error("❌ Login Error:", err.message);
-    res.status(500).json({ message: "Login failed", error: err.message });
-  }
+  })(req, res, next);
 });
 
 module.exports = router;

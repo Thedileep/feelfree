@@ -9,32 +9,40 @@ const LoginDocForm = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
+    setErrorMsg(""); 
+
     try {
-      const res  = await axios.post(
+      const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/login-therapist`,
         form,
-        { timeout: 7000 } 
+        { timeout: 7000 }
       );
-     localStorage.setItem("doctor", JSON.stringify(res.data.doctor));
-    localStorage.setItem("doctoken", res.data.token);
-    localStorage.setItem("doclogintime", Date.now());
-    localStorage.setItem("doctorname", res.data.doctor.name);
 
+      localStorage.setItem("doctor", JSON.stringify(res.data.doctor));
+      localStorage.setItem("doctoken", res.data.token);
+      localStorage.setItem("doclogintime", Date.now());
+      localStorage.setItem("doctorname", res.data.doctor.name);
 
-      toast.success('Login successful', { autoClose: 1500 });
-      navigate('/therapist-dashboard');
+      navigate("/therapist-dashboard");
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Invalid credentials', { autoClose: 2000 });
+      const msg = err.response?.data?.message || "Invalid credentials";
+
+      if (msg.includes("under review")) {
+        setErrorMsg(msg);
+      } else {
+        toast.error(msg, { autoClose: 2000 });
+      }
     } finally {
       setLoading(false);
     }
@@ -46,10 +54,28 @@ const LoginDocForm = () => {
         onSubmit={handleSubmit}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }} // faster animation
+        transition={{ duration: 0.3 }} 
         className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md space-y-5"
       >
         <h2 className="text-2xl font-bold text-center text-indigo-700">Therapist Login</h2>
+
+        {errorMsg && (
+      <div className="error-banner bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-md animate-pulse">
+        <div className="flex items-center space-x-2">
+          <svg
+            className="w-5 h-5 text-red-500"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.1 19h13.8c1.2 0 1.9-1.3 1.3-2.3l-6.9-11.9c-.6-1-2-1-2.6 0l-6.9 11.9c-.6 1 .1 2.3 1.3 2.3z" />
+          </svg>
+          <span className="font-semibold">{errorMsg}</span>
+        </div>
+      </div>
+    )}
+
 
         <input
           type="email"

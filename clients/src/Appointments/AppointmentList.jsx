@@ -20,7 +20,6 @@ export default function AppointmentsList() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // ✅ latest first (sort by date/time or createdAt if available)
       const sorted = [...res.data].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );

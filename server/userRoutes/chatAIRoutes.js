@@ -1,10 +1,10 @@
 const express = require("express");
 const axios = require("axios");
 const router = express.Router();
-
+const authMiddleware = require('../middleware/authMiddleware');
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-router.post("/chat", async (req, res) => {
+router.post("/chat",authMiddleware, async (req, res) => {
   const userInput = req.body.message;
 
   const payload = {

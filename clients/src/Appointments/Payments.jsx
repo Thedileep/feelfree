@@ -29,53 +29,57 @@ const PaymentPage = () => {
   }, []);
 
   const handlePayment = async () => {
-    if (!storedUser?._id) {
-      toast.error("User not found. Please log in again.");
-      navigate("/login/user");
+  if (!storedUser?._id) {
+    toast.error("User not found. Please log in again.");
+    navigate("/login/user");
+    return;
+  }
+
+  if (!razorpayLoaded) {
+    toast.error("Razorpay SDK is still loading...");
+    return;
+  }
+
+  try {
+    // 1️⃣ Create payment order with doctor info
+    const { data } = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/payments/create-order`,
+      {
+        amount: 1,
+        doctorId: state.doctorId
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (!data.success) {
+      toast.error("Error creating payment order");
       return;
     }
 
-    if (!razorpayLoaded) {
-      toast.error("Razorpay SDK is still loading...");
-      return;
-    }
+    // 2️⃣ Open Razorpay checkout
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: data.order.amount,
+      currency: data.order.currency,
+      name: "Therapy Booking",
+      description: `Payment to ${state.name}`,
+      order_id: data.order.id,
+      handler: async function (response) {
+        try {
+          const verifyRes = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/payments/verify-payment`,
+            {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
 
-    try {
-      // 1️⃣ Create payment order
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/payments/create-order`,
-        { amount: 1 }
-      );
+          if (verifyRes.data.success) {
+            toast.success("Payment Successful!");
 
-      if (!data.success) {
-        toast.error("Error creating payment order");
-        return;
-      }
-
-      // 2️⃣ Open Razorpay checkout
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: data.order.amount,
-        currency: data.order.currency,
-        name: "Therapy Booking",
-        description: "Payment for booking",
-        order_id: data.order.id,
-        handler: async function (response) {
-          try {
-            // ✅ Send exact keys expected by backend
-            const verifyRes = await axios.post(
-              `${import.meta.env.VITE_API_URL}/api/payments/verify-payment`,
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature
-              }
-            );
-
-            if (verifyRes.data.success) {
-              toast.success("Payment Successful!");
-
-              const bookingRes = await axios.post(
+            const bookingRes = await axios.post(
               `${import.meta.env.VITE_API_URL}/api/bookings`,
               {
                 userId: storedUser._id,
@@ -88,30 +92,25 @@ const PaymentPage = () => {
               { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            // booking ID from backend response
             const bookingId = bookingRes.data._id || bookingRes.data.booking?._id;
-
             navigate(`/track-appointment/${bookingId}`);
-
-
-            } else {
-              toast.error("Payment verification failed");
-            }
-          } catch (error) {
-            toast.error(`Error verifying payment: ${error.message}`);
+          } else {
+            toast.error("Payment verification failed");
           }
-        },
-        theme: {
-          color: "#3399cc"
+        } catch (error) {
+          toast.error(`Error verifying payment: ${error.message}`);
         }
-      };
+      },
+      theme: { color: "#3399cc" }
+    };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      toast.error(`Payment failed! ${err.message}`);
-    }
-  };
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  } catch (err) {
+    toast.error(`Payment failed! ${err.message}`);
+  }
+};
+
 
   if (!state) {
     return <p className="text-center mt-20">Invalid booking session.</p>;

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import AdminLogin from "./adminpages/AdminLogin";
 import ProtectedAdmin from "./adminpages/ProtectedAdmin";
 import AdminDashboard from "./adminpages/AdminDashboard";
@@ -9,10 +9,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import UserAuditLogs from "./adminpages/UserAuditLog";
 import DocAuditLog from "./adminpages/DocAuditLog"
 import MedicinePage from "./adminpages/Medicine";
+import PaymentsList from "./adminpages/PaymentList";
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
      <ToastContainer position="top-center" autoClose={3000} />
       <Routes>
         <Route path="/" element={<AdminLogin/>} />
@@ -53,8 +54,17 @@ function App() {
           }
         />
 
+         <Route
+          path="/admin/get-payments"
+          element={
+            <ProtectedAdmin>
+              <PaymentsList/>
+            </ProtectedAdmin>
+          }
+        />
+
        </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

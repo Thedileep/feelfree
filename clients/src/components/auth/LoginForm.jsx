@@ -18,43 +18,43 @@ const LoginForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (loading) return; 
-    setLoading(true);
+  e.preventDefault();
+  if (loading) return; 
+  setLoading(true);
 
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/login`,
-        formData,
-        { timeout: 8000 } 
-      );
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/login`,
+      formData,
+      { timeout: 8000 } 
+    );
 
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem("loginTime", Date.now());
-      localStorage.setItem("username", res.data.user.name);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+    localStorage.setItem('token', res.data.token);
+    localStorage.setItem("loginTime", Date.now());
+    localStorage.setItem("username", res.data.user.name);
 
-      
-      toast.success('Login successful', { autoClose: 1500 });
-      navigate('/dashboard');
+    toast.success(res.data.message || "Login successful", { autoClose: 1500 });
+    navigate('/dashboard');
 
-      const sessionTimeout = 60 * 60 * 1000;
-      setTimeout(() => {
-        localStorage.clear();
-        navigate("/login");
-      }, sessionTimeout);
+    const sessionTimeout = 60 * 60 * 1000;
+    setTimeout(() => {
+      localStorage.clear();
+      navigate("/login");
+    }, sessionTimeout);
 
-    } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        (err.code === 'ECONNABORTED'
-          ? 'Network slow, please try again.'
-          : 'Invalid credentials.');
-      toast.error(msg, { autoClose: 1500 });
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    const msg =
+      err.response?.data?.message ||
+      (err.code === 'ECONNABORTED'
+        ? 'Server problem, please try again.'
+        : "login failed");
+    toast.error(msg, { autoClose: 1500 });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-tr from-indigo-300 via-blue-100 to-purple-300 flex items-center justify-center px-4">
