@@ -25,33 +25,32 @@ const RegisterForm = () => {
     }));
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (loading) return; 
-    setLoading(true);
+  e.preventDefault();
+  if (loading) return;
+  setLoading(true);
 
-    try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/register`, formData, {
-        timeout: 2000,
-      });
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/auth/register`,
+      formData,
+      { timeout: 5000 }
+    );
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("logintime", Date.now());
-      localStorage.setItem("username", res.data.user.name);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+    toast.success(res.data.message || 'Registered successfully. Please verify your email.', { autoClose: 2000 });
 
-      toast.success('User registered successfully', { autoClose: 1500 });
-      navigate('/dashboard');
-    } catch (error) {
-      const msg =
-        error.response?.data?.message ||
-        (error.code === 'ECONNABORTED'
-          ? 'Network slow, please try again.'
-          : 'Registration failed');
-      toast.error(msg, { autoClose: 2000 });
-    } finally {
-      setLoading(false);
-    }
-  };
+    navigate('/login/user');
+  } catch (error) {
+    const msg =
+      error.response?.data?.message ||
+      (error.code === 'ECONNABORTED'
+        ? 'Network slow, please try again.'
+        : 'Registration failed');
+    toast.error(msg, { autoClose: 2000 });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fields = [
     { name: 'name', type: 'text', placeholder: 'Full Name' },

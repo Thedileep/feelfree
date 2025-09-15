@@ -60,8 +60,6 @@ router.post("/register", async (req, res) => {
 
     await newUser.save();
 
-    
-
     // Audit log
     const meta = await getRequestMeta(req);
     await AuditLog.create({
@@ -74,19 +72,22 @@ router.post("/register", async (req, res) => {
     });
 
      const verifyURL = `${process.env.BASE_URL}/api/auth/verify/${token}`;
-    await transporter.sendMail({
+    transporter.sendMail({
       to: email,
       subject: "Verify your email",
       html: `<p>Click <a href="${verifyURL}">here</a> to verify your account.</p>`
-    });
+    }).catch(err => console.error("Email send failed:", err));
+
 
     res.status(201).json({ message: "User registered. Please verify your email." });
-    
+
+   
   } catch (err) {
     console.log("Registration error:", err);
     res.status(500).json({ message: "Registration failed", error: err.message });
   }
 });
+
 
 // ==================== EMAIL VERIFY ====================
 router.get("/verify/:token", async (req, res) => {
@@ -98,16 +99,6 @@ router.get("/verify/:token", async (req, res) => {
     user.verificationToken = null;
     await user.save();
 
-    // Audit log
-    const meta = await getRequestMeta(req);
-    await AuditLog.create({
-      userId: user._id,
-      action: "REGISTER",
-      ipAddress: meta.ip,
-      deviceInfo: meta.deviceInfo,
-      timestamp: meta.timestamp,
-      location: meta.location
-    });
 
     return res.send(`
       <html>
@@ -125,7 +116,7 @@ router.get("/verify/:token", async (req, res) => {
           <div class="card">
             <h2>✅ Email Verified Successfully</h2>
             <p>You can now login to your account.</p>
-            <a href="/login">Go to Login</a>
+            <a href="https://feelfree-3ktk.onrender.com/#/login/user">Go to Login</a>
           </div>
         </body>
       </html>
