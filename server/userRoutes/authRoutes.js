@@ -7,6 +7,7 @@ const nodemailer = require("nodemailer");
 
 const User = require("../models/registerModels");
 const AuditLog = require("../models/auditLog");
+const {sendDoctorBookingEmail,sendVerificationEmail}=require('../adminRoutes/mailRoutes')
 
 const router = express.Router();
 
@@ -24,20 +25,7 @@ async function getRequestMeta(req) {
   return { ip, deviceInfo, timestamp, location };
 }
 
-// Nodemailer transporter (use Gmail or any SMTP service)
-const transporter = nodemailer.createTransport({
-   service: 'gmail',
-  port: 465,
-  host: "smtp.gmail.com",
-   tls: {
-        ciphers: "SSLv3",
-    },
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS
-  },
-   secure: true,
-});
+
 
 // ==================== REGISTER ====================
 router.post("/register", async (req, res) => {
@@ -81,11 +69,11 @@ router.post("/register", async (req, res) => {
     });
 
      const verifyURL = `${process.env.BASE_URL}/api/auth/verify/${token}`;
-    transporter.sendMail({
-      to: email,
-      subject: "Verify your email",
-      html: `<p>Click <a href="${verifyURL}">here</a> to verify your account.</p>`
-    }).catch(err => console.error("Email send failed:", err));
+       try {
+      await sendVerificationEmail(email,verifyURL);
+    } catch (mailErr) {
+      console.error("Error sending booking email:", mailErr.message);
+    }
 
 
     res.status(201).json({ message: "User registered. Please verify your email." });
