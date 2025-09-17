@@ -69,13 +69,10 @@ router.post("/register", async (req, res) => {
     });
 
      const verifyURL = `${process.env.BASE_URL}/api/auth/verify/${token}`;
-       try {
-      await sendVerificationEmail(email,verifyURL);
-    } catch (mailErr) {
-      console.error("Error sending booking email:", mailErr.message);
-    }
-
-
+       await sendVerificationEmail(email, token)
+  .then(() => console.log("✅ Verification mail queued"))
+  .catch(err => console.error("❌ Could not send verification mail:", err));
+   
     res.status(201).json({ message: "User registered. Please verify your email." });
 
    
