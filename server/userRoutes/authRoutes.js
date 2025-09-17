@@ -2,8 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const passport = require("passport");
-const nodemailer = require("nodemailer");
+
 
 const User = require("../models/registerModels");
 const AuditLog = require("../models/auditLog");
@@ -69,11 +68,14 @@ router.post("/register", async (req, res) => {
     });
 
      const verifyURL = `${process.env.BASE_URL}/api/auth/verify/${token}`;
-       await sendVerificationEmail(email, token)
-  .then(() => console.log("✅ Verification mail queued"))
-  .catch(err => console.error("❌ Could not send verification mail:", err));
+      try {
+    await sendVerificationEmail(email, verifyURL);
+    res.status(201).json({ message: "User registered. Check your email for verification." });
+  } catch (err) {
+    console.error("❌ Email send error:", err.message);
+    res.status(500).json({ message: "User registered but email failed." });
+  }
    
-    res.status(201).json({ message: "User registered. Please verify your email." });
 
    
   } catch (err) {
