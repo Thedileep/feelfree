@@ -26,8 +26,17 @@ async function getRequestMeta(req) {
 
 // Nodemailer transporter (use Gmail or any SMTP service)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
+   service: 'gmail',
+  port: 465,
+  host: "smtp.gmail.com",
+   tls: {
+        ciphers: "SSLv3",
+    },
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS
+  },
+   secure: true,
 });
 
 // ==================== REGISTER ====================
@@ -127,9 +136,16 @@ router.get("/verify/:token", async (req, res) => {
 });
 
 // ==================== LOGIN ====================
-router.post("/login", (req, res, next) => {
-  passport.authenticate("local", async (err, user, info) => {
-    if (err) return next(err);
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    // User check
+    const user = await User.findOne({ email });
     if (!user) {
       const meta = await getRequestMeta(req);
       await AuditLog.create({
@@ -139,13 +155,33 @@ router.post("/login", (req, res, next) => {
         timestamp: meta.timestamp,
         location: meta.location
       });
-      return res.status(400).json({ message: info.message });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const token = jwt.sign({ id: user._id, role: "user" }, process.env.JWT_SECRET, {
-      expiresIn: "1h"
-    });
+    // Password check
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      const meta = await getRequestMeta(req);
+      await AuditLog.create({
+        userId: user._id,
+        action: "LOGIN_FAILED",
+        ipAddress: meta.ip,
+        deviceInfo: meta.deviceInfo,
+        timestamp: meta.timestamp,
+        location: meta.location
+      });
+      return res.status(401).json({ message: "Password mismatch" });
+    }
 
+    // Check if email verified
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "Email not verified. Please verify your email first." });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id, role: "user" }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+    // Audit log for successful login
     const meta = await getRequestMeta(req);
     await AuditLog.create({
       userId: user._id,
@@ -156,12 +192,17 @@ router.post("/login", (req, res, next) => {
       location: meta.location
     });
 
-    res.json({
+    // Response
+    res.status(200).json({
       message: "Login successful",
       token,
       user: { _id: user._id, name: user.name, email: user.email }
     });
-  })(req, res, next);
+
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Login failed", error: err.message });
+  }
 });
 
 module.exports = router;

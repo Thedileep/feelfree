@@ -2,10 +2,17 @@ const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  port: 465,
+  host: "smtp.gmail.com",
+   tls: {
+        ciphers: "SSLv3",
+    },
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS
-  }
+  },
+   secure: true,
+  
 });
 
 // ✅ Therapist approval mail
