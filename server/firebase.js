@@ -2,13 +2,13 @@ const { initializeApp } = require("firebase/app");
 const { getFirestore,doc,setDoc } = require("firebase/firestore");
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAUFR7hq8CiJvN_qLjUTewGjvknomXAufE",
-  authDomain: "feelfree-bf1b1.firebaseapp.com",
-  projectId: "feelfree-bf1b1",
-  storageBucket: "feelfree-bf1b1.appspot.com",
-  messagingSenderId: "95778360206",
-  appId: "1:95778360206:web:1787390cf9c9f52c8172df",
-  measurementId: "G-7NLMLS3GD0"
+  apiKey: "AIzaSyDdDrntLySV29o3bamdvbi5Vf2eYaKjCLQ",
+  authDomain: "feelfree-f9a1f.firebaseapp.com",
+  projectId: "feelfree-f9a1f",
+  storageBucket: "feelfree-f9a1f.firebasestorage.app",
+  messagingSenderId: "585519510087",
+  appId: "1:585519510087:web:3f0ecbc6ab685d6d607762",
+  measurementId: "G-9WR9ZBE0HN"
 };
 
 const app = initializeApp(firebaseConfig);

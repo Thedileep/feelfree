@@ -13,10 +13,10 @@ const Footer = () => {
 
       <p>&copy; {new Date().getFullYear()} FeelFree. All rights reserved.</p>
       <p className="mt-1">Made with ❤️ for your mental well-being.</p>
-      <p>
+      {/* <p>
         <strong className="text-indigo-600">Founder: </strong>
         <b className="text-green-600">Dileep Yadav</b>
-      </p>
+      </p> */}
     </footer>
   );
 };
